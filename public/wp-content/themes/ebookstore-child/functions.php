@@ -361,25 +361,41 @@ function ebookstore_child_footer_links( $title, array $links, $external = false 
 }
 
 /* -------------------------------------------------------------------------
- * Currency switcher (header) — uses CURCY's API, rendered with our markup
+ * Currency switchers — uses CURCY's API, rendered with our markup.
+ * Main switcher in the navigation bar, plus compact ones on the product
+ * page, cart and checkout.
  * ---------------------------------------------------------------------- */
 
 /**
  * Accessible USD / GBP switcher. Hidden if CURCY is not active.
+ *
+ * @param array $args {
+ *     @type string $label   Visible label.
+ *     @type string $variant "nav" (dark navigation bar) or "inline" (light page area).
+ * }
  */
-function ebookstore_child_currency_switcher() {
+function ebookstore_child_currency_switcher( $args = array() ) {
 	if ( ! class_exists( 'WOOMULTI_CURRENCY_F_Data' ) ) {
 		return;
 	}
+	$args = wp_parse_args(
+		is_array( $args ) ? $args : array(),
+		array(
+			'label'   => __( 'Currency', 'ebookstore-child' ),
+			'variant' => 'nav',
+		)
+	);
+
 	$data    = WOOMULTI_CURRENCY_F_Data::get_ins();
 	$current = $data->get_current_currency();
 	$links   = $data->get_links();
 	if ( count( $links ) < 2 ) {
 		return;
 	}
+	$tag = 'nav' === $args['variant'] ? 'nav' : 'div';
 	?>
-	<nav class="ebook-currency" aria-label="<?php esc_attr_e( 'Currency', 'ebookstore-child' ); ?>">
-		<span class="ebook-currency__label"><?php esc_html_e( 'Currency', 'ebookstore-child' ); ?></span>
+	<<?php echo esc_html( $tag ); ?> class="ebook-currency ebook-currency--<?php echo esc_attr( $args['variant'] ); ?>"<?php echo 'div' === $tag ? ' role="group"' : ''; ?> aria-label="<?php echo esc_attr( $args['label'] ); ?>">
+		<span class="ebook-currency__label" aria-hidden="true"><?php echo esc_html( $args['label'] ); ?></span>
 		<ul class="ebook-currency__list">
 			<?php foreach ( $links as $code => $url ) : ?>
 				<?php $active = ( $code === $current ); ?>
@@ -394,10 +410,59 @@ function ebookstore_child_currency_switcher() {
 				</li>
 			<?php endforeach; ?>
 		</ul>
-	</nav>
+	</<?php echo esc_html( $tag ); ?>>
 	<?php
 }
-add_action( 'storefront_header', 'ebookstore_child_currency_switcher', 35 );
+
+// Main switcher: navigation bar, between the menu (50) and the cart (60).
+add_action(
+	'storefront_header',
+	static function () {
+		ebookstore_child_currency_switcher();
+	},
+	55
+);
+
+// Product page: right under the price.
+add_action(
+	'woocommerce_single_product_summary',
+	static function () {
+		ebookstore_child_currency_switcher(
+			array(
+				'label'   => __( 'Show price in', 'ebookstore-child' ),
+				'variant' => 'inline',
+			)
+		);
+	},
+	11
+);
+
+// Cart: top of the cart totals box.
+add_action(
+	'woocommerce_before_cart_totals',
+	static function () {
+		ebookstore_child_currency_switcher(
+			array(
+				'label'   => __( 'Pay in', 'ebookstore-child' ),
+				'variant' => 'inline',
+			)
+		);
+	}
+);
+
+// Checkout: inside the order box, above the summary table (which reloads via AJAX at priority 10).
+add_action(
+	'woocommerce_checkout_order_review',
+	static function () {
+		ebookstore_child_currency_switcher(
+			array(
+				'label'   => __( 'Pay in', 'ebookstore-child' ),
+				'variant' => 'inline',
+			)
+		);
+	},
+	5
+);
 
 /* -------------------------------------------------------------------------
  * Cart: eBooks are sold individually — show the fixed quantity "1"

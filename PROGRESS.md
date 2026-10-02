@@ -164,3 +164,15 @@ Project root: `C:\projects\ebook-store`
 3. Exchange rate is fixed (from `.env`); automatic rate updates are a CURCY Pro feature.
 4. Checkout shows "no payment methods" until the dummy gateway (Phase 5).
 5. OPcache still off locally (slow pages on this PC only).
+
+### Phase 4 follow-ups (user requests, 2026-10-03)
+- **Currency switchers everywhere:** main switcher moved into the **navigation bar** (menu | USD/GBP | cart); compact "Show price in" switcher under the price on product pages, "Pay in" switcher in the cart totals box and the checkout order box. Phones: switcher + Menu button in the nav row; cart in the bottom bar.
+- **IP auto-detect + manual switch both active** (auto on first visit: GB → GBP, US → USD, others USD; the visitor can always switch).
+- **Exchange rate (new admin page WooCommerce → Exchange Rate)** — custom module `mu-plugins/ebook-store-core/exchange-rate.php` (CURCY free has no auto-update; Pro is paid):
+  - Google has no public exchange-rate API (scraping breaks its terms and is unreliable) → **European Central Bank** daily reference rates (official, free, no key): `https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml`; USD→GBP computed from EUR cross rates.
+  - Modes: **Automatic** (WP-Cron daily + "Update from ECB now" button) or **Manual** (admin enters the rate).
+  - Safety: rate change > 15% in one update is rejected; if automatic updates fail for 4 days → manual rate → `STORE_GBP_EXCHANGE_RATE` (.env, now fallback only).
+  - CURCY's stored rate is kept in sync; CURCY's settings page shows a notice pointing to the new page.
+  - Tested: ECB fetch (1 USD = 0.757532 GBP, ECB 2026-10-02), manual 0.80 → £6.39, invalid/empty input rejected, back to automatic → £6.05, logged-out POST 400, missing nonce 403.
+- Cart totals recalculated on every page load (header cart showed totals from the old rate).
+- Phone nav fixes (Menu button icon), checkout switcher placement, link underline in content.

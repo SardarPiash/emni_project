@@ -167,11 +167,14 @@ add_action( 'init', 'ebookstore_disable_emoji' );
  * Currencies (CURCY – Multi Currency for WooCommerce)
  * ---------------------------------------------------------------------- */
 
+require_once __DIR__ . '/ebook-store-core/exchange-rate.php';
+
 /**
- * Currencies and exchange rate always come from .env:
- * STORE_BASE_CURRENCY (rate 1), STORE_SECONDARY_CURRENCY and
- * STORE_GBP_EXCHANGE_RATE (1 base = X secondary). Uses CURCY's own
- * "wmc_settings_args" filter, so the plugin files are never edited.
+ * Currencies come from .env (STORE_BASE_CURRENCY with rate 1,
+ * STORE_SECONDARY_CURRENCY); the rate comes from the Exchange Rate module
+ * (automatic ECB rate, manual admin rate, or STORE_GBP_EXCHANGE_RATE as the
+ * last fallback). Uses CURCY's own "wmc_settings_args" filter, so the
+ * plugin files are never edited.
  *
  * @param array $params CURCY settings.
  * @return array
@@ -179,7 +182,7 @@ add_action( 'init', 'ebookstore_disable_emoji' );
 function ebookstore_currency_settings_from_env( $params ) {
 	$base   = strtoupper( (string) env( 'STORE_BASE_CURRENCY', 'USD' ) );
 	$second = strtoupper( (string) env( 'STORE_SECONDARY_CURRENCY', '' ) );
-	$rate   = (float) env( 'STORE_GBP_EXCHANGE_RATE', 0 );
+	$rate   = ebookstore_fx_current()['rate'];
 
 	if ( '' === $second || $rate <= 0 || $second === $base ) {
 		return $params;
@@ -270,3 +273,16 @@ add_filter( 'woocommerce_billing_fields', 'ebookstore_billing_fields', 20 );
 
 // No order notes for digital products.
 add_filter( 'woocommerce_enable_order_notes_field', '__return_false' );
+
+/**
+ * Recalculate cart totals on every front-end page load, so the header cart,
+ * mini cart and totals always use the current currency and exchange rate
+ * (WooCommerce otherwise reuses totals saved in the session).
+ */
+function ebookstore_refresh_cart_totals() {
+	if ( is_admin() || wp_doing_ajax() || ! function_exists( 'WC' ) || ! WC()->cart || WC()->cart->is_empty() ) {
+		return;
+	}
+	WC()->cart->calculate_totals();
+}
+add_action( 'wp_loaded', 'ebookstore_refresh_cart_totals', 40 );
