@@ -162,3 +162,111 @@ function ebookstore_disable_emoji() {
 	add_filter( 'emoji_svg_url', '__return_false' );
 }
 add_action( 'init', 'ebookstore_disable_emoji' );
+
+/* -------------------------------------------------------------------------
+ * Currencies (CURCY – Multi Currency for WooCommerce)
+ * ---------------------------------------------------------------------- */
+
+/**
+ * Currencies and exchange rate always come from .env:
+ * STORE_BASE_CURRENCY (rate 1), STORE_SECONDARY_CURRENCY and
+ * STORE_GBP_EXCHANGE_RATE (1 base = X secondary). Uses CURCY's own
+ * "wmc_settings_args" filter, so the plugin files are never edited.
+ *
+ * @param array $params CURCY settings.
+ * @return array
+ */
+function ebookstore_currency_settings_from_env( $params ) {
+	$base   = strtoupper( (string) env( 'STORE_BASE_CURRENCY', 'USD' ) );
+	$second = strtoupper( (string) env( 'STORE_SECONDARY_CURRENCY', '' ) );
+	$rate   = (float) env( 'STORE_GBP_EXCHANGE_RATE', 0 );
+
+	if ( '' === $second || $rate <= 0 || $second === $base ) {
+		return $params;
+	}
+
+	$params['currency_default']  = $base;
+	$params['currency']          = array( $base, $second );
+	$params['currency_rate']     = array( 1, $rate );
+	$params['currency_rate_fee'] = array( 0, 0 );
+	$params['currency_hidden']   = array( 0, 0 );
+	$params['currency_decimals'] = array( 2, 2 );
+	$params['currency_pos']      = array( 'left', 'left' );
+	$params['currency_custom']   = array( '', '' );
+
+	return $params;
+}
+add_filter( 'wmc_settings_args', 'ebookstore_currency_settings_from_env' );
+
+/**
+ * Show the real payment currency and amount in the checkout order summary
+ * (and the cart totals), e.g. "You will be charged in GBP: £7.89".
+ * The row is part of the order review, so it updates when the currency changes.
+ */
+function ebookstore_payment_currency_row() {
+	if ( ! function_exists( 'WC' ) || ! WC()->cart ) {
+		return;
+	}
+	$currency = get_woocommerce_currency();
+	?>
+	<tr class="ebook-charge-notice">
+		<td colspan="2">
+			<?php
+			printf(
+				/* translators: 1: currency code, 2: formatted order total */
+				esc_html__( 'You will be charged in %1$s: %2$s', 'ebook-store' ),
+				'<strong>' . esc_html( $currency ) . '</strong>',
+				'<strong>' . wp_kses_post( WC()->cart->get_total() ) . '</strong>'
+			);
+			?>
+		</td>
+	</tr>
+	<?php
+}
+add_action( 'woocommerce_review_order_after_order_total', 'ebookstore_payment_currency_row' );
+add_action( 'woocommerce_cart_totals_after_order_total', 'ebookstore_payment_currency_row' );
+
+/* -------------------------------------------------------------------------
+ * Checkout: digital products only need name, email and country
+ * ---------------------------------------------------------------------- */
+
+/**
+ * Keep only first name, last name, email and country in the billing form
+ * (checkout and My Account). Country stays because it is needed for the
+ * payment gateway, fraud checks and any future US/UK tax setup.
+ *
+ * @param array $fields Billing fields.
+ * @return array
+ */
+function ebookstore_billing_fields( $fields ) {
+	$keep = array(
+		'billing_first_name' => 10,
+		'billing_last_name'  => 20,
+		'billing_email'      => 30,
+		'billing_country'    => 40,
+	);
+
+	foreach ( array_keys( $fields ) as $key ) {
+		if ( ! isset( $keep[ $key ] ) ) {
+			unset( $fields[ $key ] );
+		}
+	}
+
+	foreach ( $keep as $key => $priority ) {
+		if ( isset( $fields[ $key ] ) ) {
+			$fields[ $key ]['priority'] = $priority;
+		}
+	}
+
+	if ( isset( $fields['billing_email'] ) ) {
+		$fields['billing_email']['label']       = __( 'Email address', 'ebook-store' );
+		$fields['billing_email']['description'] = __( 'Your eBook will be sent to this email.', 'ebook-store' );
+		$fields['billing_email']['class']       = array( 'form-row-wide' );
+	}
+
+	return $fields;
+}
+add_filter( 'woocommerce_billing_fields', 'ebookstore_billing_fields', 20 );
+
+// No order notes for digital products.
+add_filter( 'woocommerce_enable_order_notes_field', '__return_false' );

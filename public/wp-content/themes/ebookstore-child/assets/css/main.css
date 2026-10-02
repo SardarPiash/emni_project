@@ -1158,3 +1158,438 @@ ul.products li.product .star-rating {
 .main-navigation ul.nav-menu {
 	margin-left: 0;
 }
+
+/* "Sample text" notice on placeholder legal pages. */
+.ebook-sample-note {
+	padding: 0.75rem 1rem;
+	border-left: 6px solid var(--color-gold);
+	border-radius: var(--radius-small);
+	background: var(--color-surface);
+	color: var(--color-text);
+}
+
+/* ==========================================================================
+   Phase 4 â€” currency switcher, cart, checkout
+   ========================================================================== */
+
+/* ---------- Header top row: brand left, currency switcher right ---------- */
+.site-header > .col-full {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem 1rem;
+}
+
+.site-header > .col-full::before,
+.site-header > .col-full::after {
+	display: none;
+}
+
+.site-header > .col-full .site-branding,
+.woocommerce-active .site-header > .col-full .site-branding {
+	float: none;
+	width: auto;
+	margin: 0;
+	flex: 1 1 auto;
+}
+
+.site-header .secondary-navigation:empty {
+	display: none;
+}
+
+.ebook-currency {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	flex: 0 0 auto;
+}
+
+.ebook-currency__label {
+	color: var(--color-bg);
+	font-size: 0.8125rem;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+
+.ebook-currency__list {
+	display: flex;
+	margin: 0;
+	padding: 2px;
+	border: 1px solid rgba(250, 247, 242, 0.6);
+	border-radius: 999px;
+	list-style: none;
+}
+
+.ebook-currency__list li {
+	margin: 0;
+}
+
+.ebook-currency__option,
+.ebook-currency__option:visited {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 4.5rem;
+	min-height: var(--tap);
+	padding: 0 0.875rem;
+	border-radius: 999px;
+	color: var(--color-surface);
+	font-size: 0.9375rem;
+	font-weight: 600;
+	text-decoration: none;
+	white-space: nowrap;
+}
+
+.ebook-currency__option:hover {
+	background: var(--color-primary-dark);
+	color: var(--color-surface);
+}
+
+.ebook-currency__option.is-active,
+.ebook-currency__option.is-active:hover {
+	background: var(--color-gold);
+	color: var(--color-primary-dark);
+	cursor: default;
+}
+
+@media (max-width: 599px) {
+	.ebook-currency__label {
+		position: absolute !important;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip: rect(1px, 1px, 1px, 1px);
+		white-space: nowrap;
+	}
+
+	.ebook-currency__option {
+		min-width: 3.75rem;
+		padding: 0 0.625rem;
+		font-size: 0.875rem;
+	}
+}
+
+/* ---------- Shared tables (cart, checkout review, order details) ---------- */
+.woocommerce table.shop_table,
+table.shop_table {
+	width: 100%;
+	border: 1px solid var(--color-border);
+	border-collapse: separate;
+	border-spacing: 0;
+	border-radius: var(--radius);
+	background: var(--color-surface);
+	overflow: hidden;
+}
+
+table.shop_table th,
+table.shop_table td {
+	padding: 1rem;
+	border-top: 1px solid var(--color-border);
+	background: transparent;
+	vertical-align: middle;
+}
+
+table.shop_table thead th {
+	border-top: 0;
+	background: var(--color-bg);
+	color: var(--color-primary);
+	font-size: 0.875rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+table.shop_table tr:first-child th,
+table.shop_table tr:first-child td,
+table.shop_table thead + tbody tr:first-child td {
+	border-top: 0;
+}
+
+table.shop_table .order-total th,
+table.shop_table .order-total td,
+table.shop_table .order-total .amount {
+	color: var(--color-primary);
+	font-size: 1.125rem;
+	font-weight: 700;
+}
+
+/* "You will be charged in ..." row */
+table.shop_table tr.ebook-charge-notice td {
+	padding: 0.75rem 1rem;
+	background: var(--color-bg);
+	border-left: 6px solid var(--color-gold);
+	color: var(--color-text);
+	font-size: 0.9375rem;
+	text-align: left;
+}
+
+table.shop_table tr.ebook-charge-notice td::before {
+	display: none; /* WooCommerce responsive table label */
+}
+
+/* ---------- Cart ---------- */
+.woocommerce-cart .entry-title,
+.woocommerce-checkout .entry-title {
+	margin-bottom: 1.5rem;
+}
+
+.woocommerce-cart-form .product-thumbnail img {
+	width: 64px;
+	max-width: 64px;
+	aspect-ratio: 2 / 3;
+	object-fit: cover;
+	border-radius: 4px;
+	box-shadow: 0 1px 4px rgba(21, 40, 66, 0.2);
+}
+
+.woocommerce-cart-form .product-name a {
+	font-family: var(--font-heading);
+	font-weight: 700;
+	text-decoration: none;
+}
+
+.woocommerce-cart-form .product-name a:hover {
+	text-decoration: underline;
+}
+
+.woocommerce-cart-form a.remove {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--tap);
+	height: var(--tap);
+	border-radius: 999px;
+	color: var(--color-error) !important;
+	font-size: 1.5rem;
+	text-decoration: none;
+}
+
+.woocommerce-cart-form a.remove:hover {
+	background: var(--color-error);
+	color: var(--color-surface) !important;
+}
+
+/* eBooks are sold individually: nothing to update. */
+.woocommerce-cart-form button[name="update_cart"] {
+	display: none;
+}
+
+.woocommerce-cart-form .coupon {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+.woocommerce-cart-form .coupon .input-text {
+	flex: 1 1 10rem;
+	width: auto;
+}
+
+.cart-collaterals .cart_totals {
+	padding: 1.5rem;
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius);
+	background: var(--color-surface);
+	box-shadow: var(--shadow);
+}
+
+.cart-collaterals .cart_totals h2 {
+	font-size: 1.375rem;
+}
+
+.cart-collaterals .cart_totals table.shop_table {
+	border: 0;
+	box-shadow: none;
+}
+
+.wc-proceed-to-checkout .checkout-button {
+	display: flex;
+	width: 100%;
+	min-height: 56px;
+	font-size: 1.125rem;
+}
+
+.cart-empty.woocommerce-info {
+	font-size: 1.0625rem;
+}
+
+.return-to-shop .button {
+	margin-top: 0.5rem;
+}
+
+/* ---------- Checkout ---------- */
+.woocommerce-checkout #customer_details,
+.woocommerce-checkout #order_review {
+	padding: 1.5rem;
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius);
+	background: var(--color-surface);
+	box-shadow: var(--shadow);
+}
+
+.woocommerce-checkout #customer_details {
+	margin-bottom: 2rem;
+}
+
+.woocommerce-checkout #customer_details .col-1,
+.woocommerce-checkout #customer_details .col-2 {
+	float: none;
+	width: 100%;
+}
+
+.woocommerce-checkout #customer_details .col-2:empty,
+.woocommerce-checkout .woocommerce-additional-fields:empty {
+	display: none;
+}
+
+.woocommerce-checkout h3,
+.woocommerce-checkout #order_review_heading {
+	font-size: 1.375rem;
+	margin-bottom: 1rem;
+}
+
+.woocommerce form .form-row {
+	margin-bottom: 1rem;
+	padding: 0;
+}
+
+.woocommerce form .form-row label {
+	display: block;
+	margin-bottom: 0.25rem;
+}
+
+.woocommerce form .form-row .input-text,
+.woocommerce form .form-row select {
+	width: 100%;
+}
+
+.woocommerce form .form-row .description,
+.woocommerce-input-wrapper .description {
+	display: block !important;
+	position: static !important;
+	margin-top: 0.375rem;
+	padding: 0;
+	background: transparent !important;
+	color: var(--color-muted);
+	font-size: 0.875rem;
+}
+
+.woocommerce-input-wrapper .description::before {
+	display: none !important;
+}
+
+.woocommerce form .form-row.woocommerce-invalid .input-text,
+.woocommerce form .form-row.woocommerce-invalid select {
+	border-color: var(--color-error);
+}
+
+.woocommerce form .form-row.woocommerce-validated .input-text {
+	border-color: var(--color-success);
+}
+
+/* Payment box */
+#payment {
+	margin-top: 1.5rem;
+	border-radius: var(--radius-small);
+	background: var(--color-bg);
+}
+
+#payment .payment_methods {
+	margin: 0;
+	padding: 1rem;
+	border-bottom: 1px solid var(--color-border);
+	list-style: none;
+}
+
+#payment .payment_methods > li,
+#payment .payment_methods li.woocommerce-notice {
+	margin: 0 0 0.5rem;
+	padding: 0.75rem 1rem;
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-small);
+	background: var(--color-surface);
+}
+
+#payment .payment_methods li .payment_box {
+	margin-top: 0.75rem;
+	padding: 0.75rem 1rem;
+	border-radius: var(--radius-small);
+	background: var(--color-bg);
+	color: var(--color-text);
+}
+
+#payment .place-order {
+	margin: 0;
+	padding: 1rem;
+}
+
+#payment .woocommerce-privacy-policy-text {
+	color: var(--color-muted);
+	font-size: 0.875rem;
+}
+
+.woocommerce-checkout #place_order {
+	display: flex;
+	width: 100%;
+	min-height: 56px;
+	font-size: 1.125rem;
+}
+
+@media (min-width: 768px) {
+	.woocommerce-checkout #customer_details {
+		margin-bottom: 0;
+	}
+}
+
+/* Storefront's cart cells use thick borders coloured by its Customizer CSS (removed). */
+table.cart td.actions {
+	padding: 1rem;
+	border-top: 1px solid var(--color-border);
+	background: var(--color-bg);
+}
+
+table.cart td.product-remove {
+	padding: 0.5rem 0.5rem 0;
+	border-top: 0;
+	text-align: right;
+}
+
+table.cart tr + tr td.product-remove {
+	border-top: 1px solid var(--color-border);
+}
+
+table.cart td.product-remove a.remove {
+	position: static;
+	float: none;
+	margin-left: auto;
+	font-size: 1.5rem;
+}
+
+.ebook-qty {
+	font-weight: 600;
+}
+
+@media (min-width: 768px) {
+	table.cart td.product-remove {
+		width: 3.5rem;
+		padding: 1rem 0.5rem;
+		text-align: center;
+	}
+
+	table.cart tr + tr td.product-remove {
+		border-top: 1px solid var(--color-border);
+	}
+}
+
+/* Header cart stays white on the cart page (Storefront colours the "current" menu item dark). */
+.site-header ul.menu li.current-menu-item > a,
+.site-header .site-header-cart .cart-contents {
+	color: var(--color-surface);
+}
+
+/* Remove (x) icon uses the error colour (5.5:1 on white) and inverts on hover. */
+table.cart td.product-remove a.remove::before {
+	color: inherit;
+}

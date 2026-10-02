@@ -8,8 +8,8 @@ Project root: `C:\projects\ebook-store`
 | 0 | Environment check and project setup | ✅ Complete (2026-10-03) |
 | 1 | WordPress install + `.env` configuration | ✅ Complete (2026-10-03) |
 | 2 | WooCommerce core setup + sample eBooks | ✅ Complete (2026-10-03) |
-| 3 | Theme, design and responsive pages | ✅ Complete (2026-10-03) — waiting for "next" |
-| 4 | Cart, checkout and currency | ⏳ Not started |
+| 3 | Theme, design and responsive pages | ✅ Complete (2026-10-03) |
+| 4 | Cart, checkout and currency | ✅ Complete (2026-10-03) — waiting for "next" |
 | 5 | Dummy payment gateway | ⏳ Not started |
 | 6 | Email delivery via SMTP | ⏳ Not started |
 | 7 | QA, security and Hostinger deployment guide | ⏳ Not started |
@@ -136,3 +136,31 @@ Project root: `C:\projects\ebook-store`
 3. Product page cover fades in (WooCommerce gallery, 0.25s) — headless screenshots catch it mid-fade; real browsers are fine (verified with reduced-motion screenshot).
 4. Twenty Twenty-Five kept as inactive fallback theme (WordPress recommends one default theme); can be removed in Phase 7.
 5. New `.env` key: `STORE_TAGLINE`.
+
+---
+
+## Phase 4 — Cart, checkout and currency (2026-10-03)
+
+### User decisions (2026-10-03)
+- **Reviews:** anyone can review (no purchase/login needed); every review is held for admin approval; the reviewer sees "Your review is awaiting approval". Settings: `woocommerce_review_rating_verification_required=no`, `comment_moderation=1`, `comment_previously_approved=0`. Tested full cycle (submit → hidden → approve → visible → delete).
+- **Privacy Policy + Terms & Conditions:** published with sample text (visible "Sample text: replace…" note at the top of each) → footer links now show. Pages: `/privacy-policy/` (#3, set as WP privacy page), `/terms/` (#32). Terms page is NOT set as WooCommerce "terms" page (no checkbox at checkout).
+- **OPcache:** proposed (pages ~1.2 s → ~0.2 s locally, measured) but NOT approved — php.ini unchanged.
+
+### Done
+- CURCY 2.2.17 installed (checksums verified, declares HPOS + blocks compatibility).
+- Currencies USD (default, rate 1) + GBP (rate 0.79). The mu-plugin forces currencies and the rate from `.env` (`STORE_BASE_CURRENCY`, `STORE_SECONDARY_CURRENCY`, `STORE_GBP_EXCHANGE_RATE`) via CURCY's `wmc_settings_args` filter; the stored option holds the same values.
+- **Pay in selected currency** (`enable_multi_payment`, free). Verified with two temporary orders via the built-in Check payments gateway (enabled only for the test, then disabled; orders deleted): GBP order saved as **GBP 6.31** (= 7.99 × 0.79), USD order as **USD 7.99**; no address/phone stored.
+- **Auto-detect** (free): GB → GBP, US → USD, others → USD (default), using WooCommerce geolocation (`geo_api=0`). Tested by simulating CURCY's country cookie (localhost has no real location).
+- Floating CURCY sidebar/price switchers off; theme shows an accessible **USD $ / GBP £** pill switcher in the header (CURCY API, `aria-current`, 44px targets, label hidden on phones).
+- Checkout simplified (mu-plugin `woocommerce_billing_fields`): **First name, Last name, Email, Country** only; email labelled "Email address" + hint "Your eBook will be sent to this email."; order notes off; heading "Your details". Country kept for payment gateways / fraud checks / future tax. Same fields on My Account → Addresses.
+- **"You will be charged in GBP: £15.79"** row in checkout order review (updates with AJAX) and cart totals.
+- Cart: product, price, **quantity "1"** (WooCommerce only outputs a hidden field for sold-individually items → theme filter shows it), subtotal, total; "Update cart" hidden; coupon kept.
+- Styled cart, checkout, tables, payment box, Place order / Proceed to checkout (accent buttons). Fixed Storefront borders that relied on removed Customizer colours (dark bar in cart, header cart colour on cart page).
+- Screenshots: checkout 1440 + 500, cart 1440 + 500 (phone frame can't keep the cart cookie → 500px real window used).
+
+### Open issues / decisions
+1. **Auto-detect privacy:** without a MaxMind key, WooCommerce geolocation may look up the visitor IP with an external service. Mentioned in the sample privacy text only generally — the client should review. Can be switched off in WooCommerce → Multi Currency → Location.
+2. On Hostinger, geolocation needs either a free MaxMind license key (WooCommerce → Settings → Integration) or keeps using WooCommerce's fallback lookup.
+3. Exchange rate is fixed (from `.env`); automatic rate updates are a CURCY Pro feature.
+4. Checkout shows "no payment methods" until the dummy gateway (Phase 5).
+5. OPcache still off locally (slow pages on this PC only).

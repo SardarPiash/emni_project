@@ -27,6 +27,7 @@ from `C:\projects\ebook-store` in PowerShell (`wp-cli.yml` points WP-CLI to `pub
 | Slug | Version | Install command |
 |------|---------|-----------------|
 | woocommerce | 11.1.2 | `wp plugin install woocommerce --version=11.1.2 --activate` |
+| woo-multi-currency (CURCY) | 2.2.17 | `wp plugin install woo-multi-currency --version=2.2.17 --activate` — currencies + rate are forced from `.env` by the mu-plugin; other settings in WooCommerce → Multi Currency |
 
 ## Our own code (in git)
 

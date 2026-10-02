@@ -359,3 +359,75 @@ function ebookstore_child_footer_links( $title, array $links, $external = false 
 	</nav>
 	<?php
 }
+
+/* -------------------------------------------------------------------------
+ * Currency switcher (header) — uses CURCY's API, rendered with our markup
+ * ---------------------------------------------------------------------- */
+
+/**
+ * Accessible USD / GBP switcher. Hidden if CURCY is not active.
+ */
+function ebookstore_child_currency_switcher() {
+	if ( ! class_exists( 'WOOMULTI_CURRENCY_F_Data' ) ) {
+		return;
+	}
+	$data    = WOOMULTI_CURRENCY_F_Data::get_ins();
+	$current = $data->get_current_currency();
+	$links   = $data->get_links();
+	if ( count( $links ) < 2 ) {
+		return;
+	}
+	?>
+	<nav class="ebook-currency" aria-label="<?php esc_attr_e( 'Currency', 'ebookstore-child' ); ?>">
+		<span class="ebook-currency__label"><?php esc_html_e( 'Currency', 'ebookstore-child' ); ?></span>
+		<ul class="ebook-currency__list">
+			<?php foreach ( $links as $code => $url ) : ?>
+				<?php $active = ( $code === $current ); ?>
+				<li>
+					<a class="ebook-currency__option<?php echo $active ? ' is-active' : ''; ?>"
+						href="<?php echo esc_url( $url ); ?>"
+						rel="nofollow"
+						<?php echo $active ? 'aria-current="true"' : ''; ?>
+						aria-label="<?php echo esc_attr( sprintf( /* translators: %s: currency code */ __( 'Show prices in %s', 'ebookstore-child' ), $code ) ); ?>">
+						<?php echo esc_html( $code . ' ' . html_entity_decode( get_woocommerce_currency_symbol( $code ), ENT_QUOTES, 'UTF-8' ) ); ?>
+					</a>
+				</li>
+			<?php endforeach; ?>
+		</ul>
+	</nav>
+	<?php
+}
+add_action( 'storefront_header', 'ebookstore_child_currency_switcher', 35 );
+
+/* -------------------------------------------------------------------------
+ * Cart: eBooks are sold individually — show the fixed quantity "1"
+ * (WooCommerce outputs only a hidden field in that case).
+ * ---------------------------------------------------------------------- */
+
+add_filter(
+	'woocommerce_cart_item_quantity',
+	static function ( $quantity_html, $cart_item_key, $cart_item ) {
+		if ( ! empty( $cart_item['data'] ) && $cart_item['data']->is_sold_individually() ) {
+			$quantity_html .= '<span class="ebook-qty">' . esc_html( (string) $cart_item['quantity'] ) . '</span>';
+		}
+		return $quantity_html;
+	},
+	10,
+	3
+);
+
+/* -------------------------------------------------------------------------
+ * Checkout wording
+ * ---------------------------------------------------------------------- */
+
+add_filter(
+	'gettext_woocommerce',
+	static function ( $translation, $text ) {
+		if ( 'Billing details' === $text ) {
+			return __( 'Your details', 'ebookstore-child' );
+		}
+		return $translation;
+	},
+	10,
+	2
+);
