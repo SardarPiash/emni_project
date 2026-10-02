@@ -11,7 +11,7 @@ Project root: `C:\projects\ebook-store`
 | 3 | Theme, design and responsive pages | ✅ Complete (2026-10-03) |
 | 4 | Cart, checkout and currency | ✅ Complete (2026-10-03) |
 | 5 | Dummy payment gateway | ✅ Complete (2026-10-03) |
-| 6 | Email delivery via SMTP | 🟡 Set up + tested via email log (2026-10-03) — real send test waits for SMTP credentials in .env |
+| 6 | Email delivery via SMTP | ✅ Complete (2026-10-03) — real Gmail SMTP tested |
 | 7 | QA, security and Hostinger deployment guide | ✅ Complete (2026-10-03) — post-deploy checks run on Hostinger (DEPLOY.md §9) |
 
 ---
@@ -248,7 +248,7 @@ Project root: `C:\projects\ebook-store`
 - Final `.gitignore` check: `.env`, `.env.production`, `backups/`, `logs/`, uploads, core and third-party plugins/themes ignored; no secret found in any tracked file.
 
 ### Open items for the user
-1. Phase 6 real send test — put Gmail App Password (or Hostinger mailbox) into `.env`, then say "done".
+1. ~~Phase 6 real send test~~ — done 2026-10-03 (Gmail SMTP).
 2. Sample content (6 eBooks, test orders #35–#42, test customer `account.tester`) — keep for now or delete? (asked)
 3. Before launch (DEPLOY.md §8.6): real Privacy/Terms text, real eBooks, taxes decision, store address, real payment gateway, then `DUMMY_GATEWAY_ENABLED=false`.
 4. Optional: enable OPcache locally (pages ~1.2 s → ~0.2 s).
@@ -268,3 +268,8 @@ Working locally at `http://localhost:8080` (native Windows: PHP 8.3, MySQL 9.7, 
 - Email via WP Mail SMTP (constants from `.env`), WP Mail Logging, branded templates.
 - All secrets/changeable values in `.env`; custom code only in the child theme, the mu-plugin (+ `ebook-store-core/exchange-rate.php`) and the dummy gateway.
 - Ready for Hostinger via `DEPLOY.md`.
+
+### Phase 6 — real SMTP test (2026-10-03)
+- User added a Gmail App Password; Claude corrected the remaining `.env` lines for Gmail (`SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=587`, `SMTP_ENCRYPTION=tls`, `MAIL_FROM_EMAIL`, `STORE_SUPPORT_EMAIL`, `STORE_ADMIN_EMAIL` = the Gmail address) and removed the spaces from the App Password (16 letters) — password never displayed.
+- Sent via Gmail SMTP: test email; order #43 (GBP, success) → "Your eBook from eBook Store is ready to download" with 1 download link + admin "new order"; order #44 (USD, fail) → "Your order … was unsuccessful" (0 download links) + admin "order failed". All 5 logged as **sent**.
+- For Hostinger later: switch the SMTP lines to the Hostinger mailbox (DEPLOY.md §3c).
