@@ -2,7 +2,7 @@
 
 ## 0. How to use this plan (READ FIRST)
 
-You are Claude Code, building a WordPress + WooCommerce eBook store for local development on a Windows 10 machine using **Docker (WSL2)**. The site will later be deployed by the user to **Hostinger** (shared/WordPress hosting, no Docker on the server).
+You are Claude Code, building a WordPress + WooCommerce eBook store for local development on a **Windows 10 machine (8 GB RAM), natively, without Docker or WSL**. The site will later be deployed by the user to **Hostinger**.
 
 ### Working rules
 
@@ -12,18 +12,18 @@ You are Claude Code, building a WordPress + WooCommerce eBook store for local de
    - Give a **phase report** using the template in Section 9.
    - Update `PROGRESS.md` (phase status, what was done, open issues).
    - Then STOP and wait.
-3. Write phase reports and questions to the user in **Bangla**. Code, file names, comments and commit messages stay in English.
-   **The website itself is 100% English**: all front-end text, product content, buttons, notices, checkout labels, emails and admin settings must be in English (US). Never put Bangla text on the website.
+3. All communication with the user (phase reports, questions, `PROGRESS.md`) is in **English**. Code, file names, comments and commit messages are in English.
+   **The website itself is 100% English (en_US)**: all front-end text, product content, buttons, notices, checkout labels, emails and admin settings.
 4. If anything is unclear or a decision would change the scope, ask the user before doing it.
-5. If a session restarts, read `PLAN.md` and `PROGRESS.md` first and continue from the last unfinished phase.
+5. If a session restarts, read `ebook_prompt.md` and `PROGRESS.md` first and continue from the last unfinished phase.
 6. Commit to git at the end of each phase: `git commit -m "Phase N: <summary>"`.
+7. **Do not install Docker, WSL or Ubuntu.** This project deliberately runs natively on Windows because the machine has limited RAM.
 
 ### Always use up-to-date versions
 
-- Before installing anything, use web search / web fetch to confirm the **current stable** versions of: WordPress, WooCommerce, every plugin listed in this plan, and the Docker images used.
-- **Match Hostinger's environment.** Research (and confirm with the user from their hPanel) which PHP versions Hostinger currently offers and which MySQL version its databases run. Pin those exact versions in `.env` (`PHP_VERSION`, `MYSQL_VERSION`) and use them in Docker. Choose the newest PHP version that is both offered by Hostinger and recommended by WordPress.
-- Never use the `latest` tag for any Docker image. Always pin explicit versions.
-- Check that every plugin is compatible with the current WooCommerce version, **HPOS** (High-Performance Order Storage), the current WordPress version and the chosen PHP version. If a plugin is abandoned, incompatible, or has known security issues, propose a maintained alternative to the user before using it.
+- Before installing anything, use web search / web fetch to confirm the **current stable** versions of WordPress, WooCommerce and every plugin listed in this plan.
+- **Match Hostinger's environment.** Local PHP is 8.3 to match Hostinger. Ask the user which PHP and database versions their hPanel shows; if Hostinger's PHP differs, tell the user before continuing.
+- Check that every plugin is compatible with the current WooCommerce version, **HPOS** (High-Performance Order Storage), the current WordPress version and PHP 8.3. If a plugin is abandoned, incompatible, or has known security issues, propose a maintained alternative to the user before using it.
 - After install, run `wp core version`, `wp plugin list` and `wp theme list`, and include the versions in the phase report.
 
 ### Code rules (very important)
@@ -44,8 +44,8 @@ You are Claude Code, building a WordPress + WooCommerce eBook store for local de
 A simple, responsive eBook store for customers in the **USA and UK**.
 
 - WordPress (latest stable) + WooCommerce (latest stable)
-- Database: **MySQL** (same version as Hostinger)
-- Local development: **Docker Compose** (versions matched to Hostinger)
+- Database: **MySQL**, using `utf8mb4` with collation **`utf8mb4_unicode_ci`** everywhere (portable to Hostinger)
+- Local development: **native Windows** (PHP 8.3, MySQL 9.7 LTS, WP-CLI), no Docker
 - Website language: **English (en_US)** for all pages, emails and notices
 - eBooks are **Virtual + Downloadable** products (PDF)
 - Prices shown in **USD and GBP**
@@ -61,71 +61,53 @@ A simple, responsive eBook store for customers in the **USA and UK**.
 
 ---
 
-## 2. Environment (Windows 10 + Docker)
+## 2. Environment (already installed — verify, do not reinstall)
 
-### Host requirements
+Shell: **Windows PowerShell** (not cmd). The user is not very familiar with terminals, so give them exact commands to copy and say which window to run them in.
 
-- Windows 10 version 2004 or later (build 19041+), virtualization enabled in BIOS
-- At least 8 GB RAM recommended
-- **WSL2** with an Ubuntu distribution (`wsl --install -d Ubuntu`, run by the user in an admin PowerShell)
-- **Docker Desktop** with the WSL2 backend and WSL integration enabled for Ubuntu (`winget install Docker.DockerDesktop`, run by the user)
-- **Git** inside Ubuntu (`sudo apt install git`)
+| Tool | Version | Location |
+|------|---------|----------|
+| Scoop | latest | `C:\Users\ASUS\scoop\` |
+| PHP | 8.3.x (ZTS, via `scoop install versions/php83`) | `C:\Users\ASUS\scoop\apps\php83\current\` |
+| php.ini | — | `C:\Users\ASUS\scoop\apps\php83\current\cli\php.ini` (backup: `php.ini.bak`) |
+| MySQL | 9.7.x LTS (via `scoop install mysql-lts`) | data in `C:\Users\ASUS\scoop\persist\mysql-lts\` |
+| WP-CLI | latest | `C:\tools\wp-cli\` (`wp.bat` on user PATH) |
+| Git for Windows | latest | SSH key already set up with GitHub |
+| Node.js LTS + Claude Code | latest | global npm |
 
-Steps that need admin rights, a reboot or a GUI (installing WSL2, Docker Desktop) must be **explained to the user step by step** for them to run; do not try to force them.
+php.ini is already configured with: absolute `extension_dir`, extensions `curl, fileinfo, gd, intl, mbstring, exif, mysqli, openssl, pdo_mysql, sodium, zip`, `memory_limit = 256M`, `upload_max_filesize = 64M`, `post_max_size = 64M`, `max_execution_time = 120`, `max_input_vars = 3000`, `date.timezone = UTC`. Verify with `php -m`; fix only what is missing, and tell the user.
 
-### Where the project lives
+### Local web server
 
-For good file performance, the project must live in the **WSL2 Linux filesystem**, e.g. `~/projects/ebook-store` (accessible from Windows at `\\wsl$\Ubuntu\home\<user>\projects\ebook-store`), **not** on `C:\`. Run Claude Code and all commands from an Ubuntu (WSL2) terminal inside that folder.
+- Default: WP-CLI's built-in server (`wp server`), which uses PHP's built-in web server. It is light on RAM.
+- Known limitation: the PHP built-in server **does not read `.htaccess`**, so `.htaccess` rules (the `.env` deny rule, WooCommerce's protection of the downloads folder) cannot be tested locally. These must be verified on Hostinger (Phase 7 checklist). The main protection of `.env` is that it lives **outside** the web root, which works locally too.
+- If the built-in server causes real problems (hanging requests, WooCommerce background jobs failing), propose switching to Apache via Scoop and ask the user first. Do not switch on your own.
 
-### Containers (`docker-compose.yml`)
+### Database rules
 
-| Service | Image | Purpose |
-|---------|-------|---------|
-| `wordpress` | custom `Dockerfile` based on the official `wordpress:<ver>-php${PHP_VERSION}-apache` image | web server + PHP. Apache because Hostinger supports `.htaccess` rules (Hostinger uses LiteSpeed, which is Apache/.htaccess compatible). |
-| `db` | `mysql:${MYSQL_VERSION}` | MySQL database, data in a named volume |
-| `wpcli` | official `wordpress:cli-php${PHP_VERSION}` (pinned) | WP-CLI with the same mounts as `wordpress` |
-| `mailpit` | `axllent/mailpit:<pinned version>` | catches emails locally for quick testing |
-| `phpmyadmin` | `phpmyadmin:<pinned version>` | database GUI (Hostinger also uses phpMyAdmin) |
+- Every database and table uses `CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci` (set `DB_COLLATE` in wp-config from `.env`). MySQL 9's default `utf8mb4_0900_ai_ci` may fail to import on Hostinger.
+- Use a dedicated MySQL user for the project; never use root in `wp-config.php`.
+- Local MySQL root has no password and listens only on localhost.
 
-### Docker rules
+### RAM
 
-- All versions, ports, and credentials come from `.env` (Docker Compose reads `.env` automatically). Nothing hardcoded in `docker-compose.yml`.
-- `Dockerfile` (for `wordpress`):
-  - `ARG PHP_VERSION` and pinned base image
-  - custom `docker/php/php.ini` with values that match Hostinger's defaults as closely as possible: `upload_max_filesize = 64M`, `post_max_size = 64M`, `memory_limit = 256M`, `max_execution_time = 120`, OPcache enabled
-  - verify required extensions exist: `curl, fileinfo, gd, intl, mbstring, mysqli, openssl, pdo_mysql, zip, exif, sodium, imagick` (install any missing ones)
-  - Apache `mod_rewrite` enabled
-- Mounts:
-  - `./public` → `/var/www/html` (WordPress root)
-  - `./config` → `/var/www/config` (read-only)
-  - `./.env` → `/var/www/.env` (read-only)
-  This mirrors Hostinger, where `config/` and `.env` sit one level above `public_html`, so the same `wp-config.php` path logic works locally and in production.
-- Our own `wp-config.php` must exist before the first container start so the official image does not generate its own.
-- `db` uses a named volume (`db_data`) and a healthcheck; `wordpress` and `wpcli` wait for it (`depends_on: condition: service_healthy`).
-- Handle file ownership so files created by containers (uploads, plugin installs) stay editable by the WSL user (match UID/GID or document the fix).
-- Create a helper script `bin/wp` so the user can run WP-CLI simply: `./bin/wp plugin list` (wraps `docker compose run --rm wpcli wp "$@"`).
-- Add `.dockerignore`.
-
-Docker files are for **local development only**. They are never uploaded to Hostinger.
+The machine has 8 GB RAM. Do not start unnecessary background processes, and stop any server you started for testing when it is not needed.
 
 ---
 
 ## 3. Project structure
+
+Project root: **`C:\projects\ebook-store`** (SSD, no spaces in path). The structure mirrors Hostinger, where `public/` becomes `public_html/` and `.env` + `config/` sit **one level above the web root** so they can never be downloaded.
 
 ```
 ebook-store/
 ├── .env                      # real values — NEVER commit
 ├── .env.example              # same keys, placeholder values — commit this
 ├── .gitignore
-├── .dockerignore
-├── docker-compose.yml
-├── Dockerfile
-├── docker/
-│   └── php/php.ini           # PHP settings matching Hostinger
-├── bin/
-│   └── wp                    # WP-CLI helper script
+├── wp-cli.yml                # path: public
 ├── PLAN.md                   # this file
 ├── PROGRESS.md               # phase status log
+├── PLUGINS.md                # list of third-party plugins/themes + versions
 ├── DEPLOY.md                 # Hostinger deployment guide (Phase 7)
 ├── config/
 │   └── env-loader.php        # tiny .env parser, no Composer needed
@@ -141,7 +123,7 @@ ebook-store/
 
 ### `.gitignore` (must be complete and correct)
 
-Git tracks **only our own code and config templates**, never secrets, uploads, databases, WordPress core, or third-party plugins/themes (those are reinstalled with WP-CLI). It must cover at least:
+Git tracks **only our own code and config templates**, never secrets, uploads, databases, WordPress core, or third-party plugins/themes (they are reinstalled with WP-CLI from `PLUGINS.md`). It must cover at least:
 
 - Secrets: `.env`, `.env.*` (but keep `!.env.example`)
 - WordPress core: everything in `public/` **except** `public/wp-config.php`, `public/.htaccess`, and our own code. Use an "ignore all, then un-ignore" pattern so only these are tracked:
@@ -150,13 +132,10 @@ Git tracks **only our own code and config templates**, never secrets, uploads, d
   - `public/wp-content/plugins/ebook-dummy-gateway/`
 - Uploads, cache, backups, upgrade folders: `public/wp-content/uploads/`, `cache/`, `upgrade/`, `backup*/`, `wflogs/`
 - Database dumps and logs: `*.sql`, `*.sql.gz`, `*.log`, `debug.log`
-- OS/editor files: `.DS_Store`, `Thumbs.db`, `desktop.ini`, `.vscode/`, `.idea/`, `*.swp`
+- OS/editor files: `Thumbs.db`, `desktop.ini`, `.DS_Store`, `.vscode/`, `.idea/`, `*.swp`
 - Node/build output if ever used: `node_modules/`, `dist/`
-- Docker local overrides: `docker-compose.override.yml`
 
-After creating it, verify with `git status` and `git check-ignore -v` that `.env` and core files are ignored and our own code is tracked. Show the result in the report.
-
-Write a `PLUGINS.md` (or a section in `DEPLOY.md`) listing every third-party plugin/theme slug and version, so the environment can be rebuilt with WP-CLI.
+Set `git config core.autocrlf input` for the repo so files keep Linux line endings (Hostinger runs Linux). After creating `.gitignore`, verify with `git status` and `git check-ignore -v` that `.env` and core files are ignored and our own code is tracked, and show the result in the report.
 
 ---
 
@@ -164,26 +143,17 @@ Write a `PLUGINS.md` (or a section in `DEPLOY.md`) listing every third-party plu
 
 ### Rules
 
-- **All secrets** (DB passwords, salts, SMTP password, any API keys) live only in `.env`.
-- **All changeable values** (URLs, emails, store name, site language, currencies, feature flags, download limits, social/footer links, Docker versions and ports) also live in `.env`.
-- Nothing environment-specific is hardcoded in PHP, CSS, Docker files or the database where it can be avoided.
-- `config/env-loader.php` parses `.env` (supports comments `#`, quoted values, empty values) and provides a helper `env( 'KEY', 'default' )`. It must not overwrite variables already set by the server.
+- **All secrets** (DB password, salts, SMTP password, any API keys) live only in `.env`.
+- **All changeable values** (URLs, emails, store name, site language, currencies, feature flags, download limits, social/footer links) also live in `.env`.
+- Nothing environment-specific is hardcoded in PHP, CSS or the database where it can be avoided.
+- `config/env-loader.php` parses `.env` (supports comments `#`, quoted values, empty values, Windows and Linux line endings) and provides a helper `env( 'KEY', 'default' )`. It must not overwrite variables already set by the server.
 - `wp-config.php` loads `dirname( __DIR__ ) . '/config/env-loader.php'` and defines every constant from `.env`.
-- Add a fallback `.htaccess` rule in `public/` that denies access to any `.env` file, in case it is ever placed in the web root by mistake.
+- Add a fallback `.htaccess` rule in `public/` that denies access to any `.env` file (effective on Hostinger).
 - Keep `.env.example` in sync with `.env` at all times (same keys, safe placeholder values, a comment explaining each key).
 
 ### Required keys (`.env.example`)
 
 ```dotenv
-# ---------- Docker (local only) ----------
-COMPOSE_PROJECT_NAME=ebookstore
-PHP_VERSION=8.3                    # set to the version chosen in Hostinger hPanel
-MYSQL_VERSION=8.0                  # set to Hostinger's MySQL version
-MYSQL_ROOT_PASSWORD=change_me
-APP_PORT=8080
-PMA_PORT=8081
-MAILPIT_UI_PORT=8025
-
 # ---------- App ----------
 APP_ENV=local                      # local | production
 WP_HOME=http://localhost:8080
@@ -197,9 +167,10 @@ DISALLOW_FILE_EDIT=true
 DB_NAME=ebookstore
 DB_USER=ebookstore_user
 DB_PASSWORD=change_me
-DB_HOST=db                         # "db" in Docker; Hostinger value in production
+DB_HOST=127.0.0.1
 DB_PREFIX=wp_
 DB_CHARSET=utf8mb4
+DB_COLLATE=utf8mb4_unicode_ci
 
 # ---------- Security salts (generate unique random 64-char values) ----------
 AUTH_KEY=
@@ -222,8 +193,6 @@ STORE_DOWNLOAD_LIMIT=5             # downloads per purchase (empty = unlimited)
 STORE_DOWNLOAD_EXPIRY_DAYS=30      # days (empty = never)
 
 # ---------- Email (SMTP) ----------
-# Local quick testing: SMTP_HOST=mailpit, SMTP_PORT=1025, SMTP_ENCRYPTION=none, SMTP_AUTH=false
-# Real delivery (Phase 6 + production): Hostinger email values below
 SMTP_HOST=smtp.hostinger.com
 SMTP_PORT=465
 SMTP_ENCRYPTION=ssl                # ssl | tls | none
@@ -248,21 +217,22 @@ Add any new changeable value to both `.env` and `.env.example` and mention it in
 
 ### Run the project (local)
 
-From the Ubuntu (WSL2) terminal in the project folder:
+`wp-cli.yml` contains `path: public`. The user runs two PowerShell windows (plus the one with Claude Code):
 
-```bash
-docker compose up -d --build      # start everything
-docker compose ps                 # check all services are healthy
-./bin/wp plugin list              # run WP-CLI
-docker compose logs -f wordpress  # view logs
-docker compose down               # stop (data is kept in the db volume)
+```powershell
+# Window 1 — MySQL (keep open)
+mysqld --console
+
+# Window 2 — site (keep open)
+cd C:\projects\ebook-store
+wp server --host=localhost --port=8080 --docroot=public
 ```
 
-At the end of each phase, confirm all containers are running and give the user the URLs:
+At the end of each phase, confirm both are running and give the user the URLs:
 - Site: `http://localhost:8080`
 - Admin: `http://localhost:8080/wp-admin`
-- phpMyAdmin: `http://localhost:8081`
-- Mailpit (test inbox): `http://localhost:8025`
+
+To stop: press `Ctrl + C` in each window.
 
 ---
 
@@ -314,7 +284,7 @@ All website copy (hero text, taglines, button labels, notices, product sample co
 
 ## 6. Plugins and theme
 
-Verify the current version and compatibility of each before installing (see Section 0).
+Verify the current version and compatibility of each before installing (see Section 0). Record every third-party plugin/theme slug and version in `PLUGINS.md`.
 
 | Purpose | Choice | Notes |
 |---------|--------|-------|
@@ -331,31 +301,30 @@ Do not install anything else without asking the user.
 
 ## 7. Phases
 
-### Phase 0 — Environment check and Docker setup
+### Phase 0 — Environment check and project setup
 
-1. Check the host: Windows build, RAM, WSL2 (`wsl -l -v`), Docker (`docker --version`, `docker compose version`), Git. Guide the user through installing anything missing (Section 2).
-2. Confirm the project folder is inside the WSL2 filesystem.
-3. Research current stable versions (WordPress, WooCommerce, Docker images) and **Hostinger's PHP and MySQL versions**. Ask the user to confirm the versions shown in their hPanel (PHP Configuration and phpMyAdmin server info) if they already have the hosting account.
-4. Create the project structure (Section 3), `.gitignore`, `.dockerignore`, `PROGRESS.md`, `git init`.
-5. Create `.env` and `.env.example` with Docker keys and versions, `Dockerfile`, `docker/php/php.ini`, `docker-compose.yml`, `bin/wp`.
-6. Build and start the containers; verify PHP version and extensions (`docker compose exec wordpress php -v`, `php -m`) and MySQL version.
+1. Verify (do not reinstall) all tools from Section 2: `git --version`, `php -v`, `php -m`, `mysql --version`, `wp --info`, `node -v`. Report anything missing or wrong with the exact fix command.
+2. Check MySQL is running (`mysql -u root -e "SELECT VERSION();"`). If not, tell the user to open a new PowerShell window and run `mysqld --console`.
+3. Research current stable versions of WordPress and WooCommerce via web search and list them.
+4. Ask the user which PHP and database versions their Hostinger hPanel shows (if they have an account yet).
+5. In `C:\projects\ebook-store`: create the folder structure (Section 3), `.gitignore`, `wp-cli.yml`, `PROGRESS.md`; `git init` if not done; `git config core.autocrlf input`.
 
-**Deliverable:** Docker environment running with versions matching Hostinger; correct `.gitignore`.
-**User test:** run `docker compose ps`, open phpMyAdmin and Mailpit; check the versions listed in the report.
+**Deliverable:** all tools verified, versions listed, project structure and correct `.gitignore`.
+**User test:** run the version commands from the report.
 
 ### Phase 1 — WordPress install + `.env` configuration
 
-1. Create the database and dedicated user (utf8mb4) via environment variables or an init script.
-2. Create `config/env-loader.php`, and fill `.env` with freshly generated random salts and the local DB credentials.
-3. Write `public/wp-config.php` that reads **everything** from `.env` (DB, salts, URLs, debug flags, `DISALLOW_FILE_EDIT`, SMTP constants) **before** WordPress core is placed, so the Docker image does not generate its own.
-4. Download the latest stable WordPress (English) into `public/` with WP-CLI.
+1. Create the database (`utf8mb4` / `utf8mb4_unicode_ci`) and a dedicated user with a generated strong password, using `mysql -u root -e "..."`.
+2. Create `config/env-loader.php`, `.env` (with freshly generated random salts and the local DB credentials) and `.env.example`.
+3. Write `public/wp-config.php` that reads **everything** from `.env` (DB including `DB_COLLATE`, salts, URLs, debug flags, `DISALLOW_FILE_EDIT`, SMTP constants).
+4. Download the latest stable WordPress (English) into `public/` with `wp core download`.
 5. Install WordPress via WP-CLI (admin credentials: ask the user or generate and tell them in the report; the admin username must not be "admin").
 6. Settings: site title from `STORE_NAME`, site language from `SITE_LOCALE` (`wp site switch-language en_US`), date/time format in US style, timezone, permalinks `/%postname%/`, disable comments/pingbacks on new posts, remove default sample content.
-7. Add `.htaccess` deny rule for `.env`.
+7. Add `.htaccess` (WordPress rewrite rules + `.env` deny rule).
 8. Verify with `git status` that WordPress core files are ignored and only our files are tracked.
 
 **Deliverable:** WordPress running at `http://localhost:8080` in English, configured only from `.env`.
-**User test:** open the site and admin; change `STORE_NAME` in `.env`, restart, and see the site title follow (if wired that way). Explain exactly what to try.
+**User test:** open the site and admin; change `STORE_NAME` in `.env`, refresh, and see the site title follow (if wired that way). Explain exactly what to try.
 
 ### Phase 2 — WooCommerce core setup + sample eBooks
 
@@ -370,7 +339,7 @@ Do not install anything else without asking the user.
    - Downloads: method **Force downloads**, "Grant access after payment" ON, append unique string to filename ON, approved download directories configured
    - Default download limit and expiry from `.env` (applied via `ebook-store-core` mu-plugin when products are saved, or as documented defaults)
 4. Ensure WooCommerce pages exist: Shop, Cart, Checkout, My Account. Use the **classic** cart and checkout (`[woocommerce_cart]`, `[woocommerce_checkout]`) for best compatibility with the currency plugin and the dummy gateway. Explain this choice in the report; ask the user if they prefer block checkout.
-5. Generate 4–6 sample eBooks in `sample-content/` (simple dummy PDFs and placeholder cover images, e.g. created with PHP GD inside the container) and create products via WP-CLI: Virtual, Downloadable, Sold individually, price, short + long description in English, cover image, PDF attached.
+5. Generate 4–6 sample eBooks in `sample-content/` (simple dummy PDFs and placeholder cover images, e.g. created with PHP GD) and create products via WP-CLI: Virtual, Downloadable, Sold individually, price, short + long description in English, cover image, PDF attached.
 
 **Deliverable:** WooCommerce configured with sample eBooks.
 **User test:** see products in admin and on the default shop page; check a product has its PDF attached.
@@ -385,7 +354,7 @@ Do not install anything else without asking the user.
 6. Test responsiveness at 375 / 768 / 1024 / 1440 px.
 
 **Deliverable:** finished look of home and product pages on all devices.
-**User test:** open the site on desktop and resize the browser; use the browser's device toolbar (F12) for phone/tablet sizes. If the user wants to test on a real phone, explain how (PC's local IP, Windows firewall, and temporarily setting `WP_HOME`/`WP_SITEURL` to that IP).
+**User test:** open the site on desktop and resize the browser; use the browser's device toolbar (F12 → device icon) for phone/tablet sizes. If the user wants to test on a real phone, explain how (`wp server --host=0.0.0.0`, the PC's local IP, Windows firewall prompt, and temporarily setting `WP_HOME`/`WP_SITEURL` to that IP).
 
 ### Phase 4 — Cart, checkout and currency
 
@@ -425,7 +394,7 @@ Requirements:
 - `README.md` explains how to remove it and how the real gateway will take over (a real gateway that calls `payment_complete()` keeps the same delivery flow).
 
 **Deliverable:** full test purchase flow (success and failure).
-**User test:** buy once with success and once with failure; check order statuses in admin, that the downloads appear only for the successful order (My Account / order received page), and that the emails appear in Mailpit.
+**User test:** buy once with success and once with failure; check order statuses in admin, and that the downloads appear only for the successful order (My Account / order received page). Emails are checked in Phase 6 (until then, use the email log plugin if already installed).
 
 ### Phase 6 — Email delivery via SMTP
 
@@ -433,31 +402,32 @@ Requirements:
 2. Install email logging for testing.
 3. Style WooCommerce emails with the brand colors (WooCommerce → Settings → Emails: header color, base color, footer text, and logo if provided) using built-in settings; use template overrides in the child theme only if needed. All email text in English.
 4. Make sure the customer email for a successful order contains the **download link(s)** and a clear message; failed orders send no download link.
-5. First verify with Mailpit (local SMTP values). Then ask the user to put real SMTP credentials (e.g. a Hostinger email account or a Gmail App Password) into `.env` themselves. Never ask them to paste the password into the chat; tell them which keys to fill in.
-6. Send a test email (WP Mail SMTP test tool or `./bin/wp eval "wp_mail(...)"`), then run a full purchase with real SMTP.
+5. Ask the user to put real SMTP credentials (e.g. a Hostinger email account or a Gmail App Password) into `.env` themselves. Never ask them to paste the password into the chat; tell them exactly which keys to fill in. Optionally, if the user wants a local test inbox before real SMTP, propose Mailpit via Scoop and ask first.
+6. Send a test email (WP Mail SMTP test tool or `wp eval "wp_mail(...)"`), then run a full purchase.
 
 **Deliverable:** real emails with download links after successful payment.
 **User test:** do a successful purchase with your own email address, receive the email, click the download link, get the PDF. Do a failed purchase and confirm no download email arrives.
 
 ### Phase 7 — QA, security and Hostinger deployment guide
 
-1. End-to-end tests: both currencies × success/fail, guest checkout, download limit/expiry, broken/expired link behavior, direct access to PDF file URL (must be blocked).
+1. End-to-end tests: both currencies × success/fail, guest checkout, download limit/expiry, broken/expired link behavior.
 2. Responsive check of every page (home, product, cart, checkout, order received, My Account) at all breakpoints.
-3. Language check: confirm no Bangla or placeholder text appears anywhere on the website or in emails.
-4. Security: `DISALLOW_FILE_EDIT`, debug off in production settings, `.env` not web-accessible, uploads directory protection for downloads, admin username not "admin", strong passwords, latest versions of everything.
+3. Language check: confirm no non-English or placeholder text appears anywhere on the website or in emails.
+4. Security: `DISALLOW_FILE_EDIT`, debug off in production settings, `.env` outside the web root, admin username not "admin", strong passwords, latest versions of everything.
 5. Performance basics: optimized images, no unused plugins, fonts loaded efficiently.
-6. Final `.gitignore` check: `git status` clean, no secrets, uploads or core files tracked.
+6. Final `.gitignore` check: `git status` clean, no secrets, uploads, dumps or core files tracked.
 7. Clean up sample content only if the user wants (ask).
 8. Write `DEPLOY.md` for Hostinger, including:
-   - selecting in hPanel the same PHP version used in Docker (`PHP_VERSION`)
+   - selecting PHP 8.3 (or the agreed version) in hPanel
    - creating the MySQL database and user in hPanel
-   - uploading files: `public/` contents → `public_html/`, and `config/` + `.env` **one level above** `public_html` (adjust the path in `wp-config.php` if Hostinger's folder layout differs — explain how to check). Docker files, `bin/`, `sample-content/` and `.git` are **not** uploaded.
-   - exporting the local DB (`./bin/wp db export`) and importing in phpMyAdmin
+   - uploading files: `public/` contents → `public_html/`, and `config/` + `.env` **one level above** `public_html` (adjust the path in `wp-config.php` if Hostinger's folder layout differs — explain how to check). `sample-content/` and `.git` are **not** uploaded.
+   - exporting the local DB (`wp db export`) and importing in phpMyAdmin; how to fix collation errors if any (`utf8mb4_0900_ai_ci` → `utf8mb4_unicode_ci`)
    - `wp search-replace 'http://localhost:8080' 'https://yourdomain.com' --all-tables` (via SSH), or a migration plugin alternative
-   - the full list of `.env` keys to change for production (`APP_ENV`, URLs, `DB_HOST` and other DB values, salts — regenerate, SMTP, `WP_DEBUG=false`, `DUMMY_GATEWAY_ENABLED=false` once the real gateway is installed); Docker-only keys are ignored in production
+   - the full list of `.env` keys to change for production (`APP_ENV`, URLs, DB values, salts — regenerate, SMTP, `WP_DEBUG=false`, `DUMMY_GATEWAY_ENABLED=false` once the real gateway is installed)
    - enabling SSL and forcing HTTPS
+   - **post-deploy checks that cannot be tested locally:** `https://yourdomain.com/.env` and `../.env` return 403/404; direct URLs to files in `wp-content/uploads/woocommerce_uploads/` are blocked; `.htaccess` rules work on LiteSpeed
    - how to remove the dummy gateway when the client installs the real one
-   - how to rebuild the local environment from git (`git clone`, copy `.env.example` to `.env`, `docker compose up -d --build`, install plugins from `PLUGINS.md`, import a DB dump)
+   - how to rebuild the local environment from git (`git clone`, copy `.env.example` to `.env`, create DB, install plugins from `PLUGINS.md`, import a DB dump)
 9. Final `PROGRESS.md` summary.
 
 **Deliverable:** tested project + `DEPLOY.md`.
@@ -467,21 +437,19 @@ Requirements:
 
 ## 8. Definition of done (whole project)
 
-- All features in Sections 1 and 7 work locally in Docker.
-- Docker PHP and MySQL versions match Hostinger; all image versions pinned.
+- All features in Sections 1 and 7 work locally on Windows (native PHP + MySQL).
+- Local PHP version matches Hostinger; database uses `utf8mb4_unicode_ci`.
 - The whole website and all emails are in English (en_US).
 - No core/plugin/theme files edited; all custom code in child theme, mu-plugin, or dummy gateway plugin.
 - Every secret and changeable value is in `.env`; `.env.example` is complete.
 - `.gitignore` is correct: no secrets, uploads, DB dumps or WordPress core in git.
 - Dummy gateway is isolated and removable without side effects.
 - Responsive on mobile, tablet, desktop.
-- `DEPLOY.md` lets the user deploy to Hostinger without help.
+- `DEPLOY.md` lets the user deploy to Hostinger without help, including post-deploy security checks.
 
 ---
 
 ## 9. Phase report template
-
-Use these headings; write the content in Bangla (Section 0, rule 3).
 
 ```
 ## Phase N complete: <phase name>
@@ -501,7 +469,7 @@ Use these headings; write the content in Bangla (Section 0, rule 3).
 ### How to test
 1. ...
 2. ...
-(URLs, login details, step by step)
+(URLs, login details, step by step, and which PowerShell window to use)
 
 ### Known issues / decisions you should know about
 - ...

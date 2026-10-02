@@ -1,0 +1,59 @@
+# =========================================================
+# eBook Store — Git tracks ONLY our own code and templates.
+# WordPress core and third-party plugins/themes are reinstalled
+# with WP-CLI (see PLUGINS.md).
+# =========================================================
+
+# ---------- Secrets ----------
+.env
+.env.*
+!.env.example
+
+# ---------- WordPress root: ignore all, then un-ignore our files ----------
+/public/*
+!/public/wp-config.php
+!/public/.htaccess
+
+!/public/wp-content/
+/public/wp-content/*
+
+# Child theme (ours)
+!/public/wp-content/themes/
+/public/wp-content/themes/*
+!/public/wp-content/themes/ebookstore-child/
+
+# Must-use plugin (ours)
+!/public/wp-content/mu-plugins/
+/public/wp-content/mu-plugins/*
+!/public/wp-content/mu-plugins/ebook-store-core.php
+!/public/wp-content/mu-plugins/ebook-store-core/
+
+# Dummy payment gateway (ours, removable)
+!/public/wp-content/plugins/
+/public/wp-content/plugins/*
+!/public/wp-content/plugins/ebook-dummy-gateway/
+
+# ---------- Uploads, cache, backups, upgrades ----------
+/public/wp-content/uploads/
+cache/
+upgrade/
+backup*/
+wflogs/
+
+# ---------- Database dumps and logs ----------
+*.sql
+*.sql.gz
+*.log
+debug.log
+
+# ---------- OS / editor files ----------
+Thumbs.db
+desktop.ini
+.DS_Store
+.vscode/
+.idea/
+*.swp
+
+# ---------- Node / build output ----------
+node_modules/
+dist/
