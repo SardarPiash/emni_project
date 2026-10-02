@@ -5,8 +5,8 @@ Project root: `C:\projects\ebook-store`
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 0 | Environment check and project setup | ✅ Complete (2026-10-03) — waiting for "next" |
-| 1 | WordPress install + `.env` configuration | ⏳ Not started |
+| 0 | Environment check and project setup | ✅ Complete (2026-10-03) |
+| 1 | WordPress install + `.env` configuration | ✅ Complete (2026-10-03) — waiting for "next" |
 | 2 | WooCommerce core setup + sample eBooks | ⏳ Not started |
 | 3 | Theme, design and responsive pages | ⏳ Not started |
 | 4 | Cart, checkout and currency | ⏳ Not started |
@@ -42,8 +42,33 @@ Project root: `C:\projects\ebook-store`
 - WP-CLI picks up the project config (`wp --info` → `C:\projects\ebook-store\wp-cli.yml`).
 
 ### Open issues / decisions
-1. **MySQL listens on all network interfaces** (`bind_address = *`) while root has no password. The plan requires localhost only. Fix proposed to the user (add `bind-address=127.0.0.1` to MySQL's `my.ini`) — waiting for approval.
+1. ~~MySQL listens on all network interfaces~~ — **fixed in Phase 1** (user approved): added `bind-address=127.0.0.1` and `mysqlx-bind-address=127.0.0.1` to `C:\Users\ASUS\scoop\persist\mysql-lts\my.ini` (backup `my.ini.bak`). Verified ports 3306/33060 listen on 127.0.0.1 only.
 2. **Hostinger database is MariaDB, not MySQL** (on shared/cloud hosting). Local is MySQL 9.7. Using `utf8mb4_unicode_ci` everywhere (plan rule) keeps the export importable. Exact PHP/MariaDB versions to be confirmed once the user has a Hostinger account (no account yet). Hostinger offers PHP 8.3, so local PHP 8.3 matches.
 3. MySQL server default collation is `utf8mb4_0900_ai_ci` — the project database will be created explicitly with `utf8mb4_unicode_ci` in Phase 1.
 4. The old folder `C:\New folder\emni_project` still exists; it is no longer used. The user can delete it once Phase 0 is committed.
 5. Plan Section 3 mentions `PLAN.md`; the user decided the plan file stays as `ebook_prompt.md`.
+
+---
+
+## Phase 1 — WordPress install + `.env` configuration (2026-10-03)
+
+### Done
+- MySQL bound to localhost (see Phase 0 issue 1).
+- Database `ebookstore` (utf8mb4 / utf8mb4_unicode_ci) and dedicated user `ebookstore_user` (@localhost and @127.0.0.1, ALL on `ebookstore.*` only) with a generated 32-char password.
+- `config/env-loader.php`: `.env` parser + `env()` helper (comments, quotes, inline comments, empty values, CRLF/LF, `export` prefix; never overwrites server variables). Tested with a fixture file — all cases pass.
+- `.env` generated from `.env.example` with random DB password and 8 random 64-char salts (secrets never printed).
+- `.env.example` — every key commented. New key: `SITE_TIMEZONE`.
+- `public/wp-config.php` reads everything from `../.env`: DB (incl. `DB_COLLATE`), salts, `WP_HOME`/`WP_SITEURL`, `WP_ENVIRONMENT_TYPE` from `APP_ENV`, debug flags, `DISALLOW_FILE_EDIT`, WP Mail SMTP constants (names verified in plugin source `src/Options.php`).
+- WordPress 7.1.2 (en_US) installed — from the official zip (SHA1 verified) because `wp core download` fails on Windows (see PLUGINS.md); `wp core verify-checksums` passes.
+- Admin user `ebook_manager` (not "admin"), generated password given to the user in the Phase 1 report; admin email `support@example.com` (placeholder).
+- Settings: language en_US, date `F j, Y`, time `g:i a`, week starts Sunday, timezone America/New_York, permalinks `/%postname%/`, comments + pingbacks closed on new posts.
+- Removed sample post, sample page, Hello Dolly, Akismet, Twenty Twenty-Three/Four. Kept: Privacy Policy draft page (footer link later), Twenty Twenty-Five (active until Storefront in Phase 3).
+- `mu-plugins/ebook-store-core.php`: site title follows `STORE_NAME` and timezone follows `SITE_TIMEZONE` live from `.env`; those fields are disabled in Settings → General with a note.
+- `public/.htaccess`: WordPress rewrite rules + `.env` deny rule (effective on Hostinger only).
+- `PLUGINS.md` created.
+- Tests: home, wp-login, REST API return 200; pretty permalinks work; title changes when `STORE_NAME` changes; no PHP errors in debug.log; git tracks only our 5 new files.
+
+### Open issues / decisions
+1. **Collation:** WordPress automatically upgrades `utf8mb4_unicode_ci` to `utf8mb4_unicode_520_ci` for its tables when the server supports it. MariaDB (Hostinger) supports this collation, so the export stays portable. The problematic `utf8mb4_0900_ai_ci` is not used. Re-check in Phase 7 before export.
+2. Admin email is a placeholder (`support@example.com`) — user should change it to a real address in Settings → General (or tell Claude).
+3. `.env` deny rule and other `.htaccess` rules can only be verified on Hostinger (PHP built-in server ignores `.htaccess`).
