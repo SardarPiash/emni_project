@@ -1,0 +1,6 @@
+Self-hosted web fonts (Latin subset, variable weight), downloaded from Google Fonts.
+
+- Inter            — Copyright The Inter Project Authors. SIL Open Font License 1.1
+- Merriweather     — Copyright The Merriweather Project Authors. SIL Open Font License 1.1
+
+License text: https://openfontlicense.org/open-font-license-official-text/

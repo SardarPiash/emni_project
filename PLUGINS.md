@@ -19,7 +19,8 @@ from `C:\projects\ebook-store` in PowerShell (`wp-cli.yml` points WP-CLI to `pub
 
 | Slug | Version | Status | Install command |
 |------|---------|--------|-----------------|
-| twentytwentyfive | 1.5 | active (temporary — replaced by Storefront in Phase 3) | bundled with WordPress |
+| storefront | 4.6.2 | parent of ebookstore-child | `wp theme install storefront --version=4.6.2` |
+| twentytwentyfive | 1.5 | inactive fallback (WordPress default) | bundled with WordPress |
 
 ## Plugins
 
@@ -32,7 +33,7 @@ from `C:\projects\ebook-store` in PowerShell (`wp-cli.yml` points WP-CLI to `pub
 | Path | Type |
 |------|------|
 | `public/wp-content/mu-plugins/ebook-store-core.php` | must-use plugin |
-| `public/wp-content/themes/ebookstore-child/` | child theme (Phase 3) |
+| `public/wp-content/themes/ebookstore-child/` | child theme (active) |
 | `public/wp-content/plugins/ebook-dummy-gateway/` | test-only gateway (Phase 5) |
 
 ## Sample content (in git, local testing only)

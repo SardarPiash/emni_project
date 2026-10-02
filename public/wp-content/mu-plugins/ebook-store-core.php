@@ -18,6 +18,7 @@ defined( 'ABSPATH' ) || exit;
 function ebookstore_env_options() {
 	return array(
 		'blogname'             => 'STORE_NAME',
+		'blogdescription'      => 'STORE_TAGLINE',
 		'timezone_string'      => 'SITE_TIMEZONE',
 		'woocommerce_currency' => 'STORE_BASE_CURRENCY',
 	);
@@ -94,3 +95,70 @@ function ebookstore_apply_download_defaults( $product ) {
 	$product->update_meta_data( '_ebookstore_download_defaults', 'yes' );
 }
 add_action( 'woocommerce_before_product_object_save', 'ebookstore_apply_download_defaults' );
+
+/**
+ * URL of the "Buy Now" action for a product: adds it to the cart (once)
+ * and goes straight to checkout.
+ *
+ * @param int|WC_Product $product Product or product ID.
+ * @return string Empty string if the product does not exist.
+ */
+function ebookstore_buy_now_url( $product ) {
+	$product = wc_get_product( $product );
+	if ( ! $product ) {
+		return '';
+	}
+	return add_query_arg( 'ebook-buy-now', $product->get_id(), wc_get_checkout_url() );
+}
+
+/**
+ * Handle "Buy Now" links (?ebook-buy-now=<product ID>).
+ *
+ * Runs after WooCommerce's own add-to-cart handler (wp_loaded, 20).
+ * Products are sold individually, so an eBook already in the cart is not
+ * added again (avoids WooCommerce's "cannot add another" error).
+ */
+function ebookstore_handle_buy_now() {
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Same as WooCommerce's ?add-to-cart= links.
+	if ( empty( $_GET['ebook-buy-now'] ) || ! function_exists( 'WC' ) || ! WC()->cart ) {
+		return;
+	}
+
+	$product_id = absint( wp_unslash( $_GET['ebook-buy-now'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	$product    = wc_get_product( $product_id );
+
+	if ( ! $product || ! $product->is_purchasable() || ! $product->is_in_stock() ) {
+		wc_add_notice( __( 'Sorry, this eBook is not available for purchase right now.', 'ebook-store' ), 'error' );
+		wp_safe_redirect( wc_get_page_permalink( 'shop' ) );
+		exit;
+	}
+
+	$in_cart = WC()->cart->find_product_in_cart( WC()->cart->generate_cart_id( $product_id ) );
+
+	if ( ! $in_cart && false === WC()->cart->add_to_cart( $product_id, 1 ) ) {
+		wp_safe_redirect( $product->get_permalink() );
+		exit;
+	}
+
+	wp_safe_redirect( wc_get_checkout_url() );
+	exit;
+}
+add_action( 'wp_loaded', 'ebookstore_handle_buy_now', 30 );
+
+/**
+ * Disable the WordPress emoji script and styles: browsers render emoji
+ * natively, and this avoids loading images from s.w.org on every page.
+ */
+function ebookstore_disable_emoji() {
+	remove_action( 'wp_head', 'print_emoji_detection_script', 7 );
+	remove_action( 'admin_print_scripts', 'print_emoji_detection_script' );
+	remove_action( 'wp_print_styles', 'print_emoji_styles' );
+	remove_action( 'admin_print_styles', 'print_emoji_styles' );
+	remove_action( 'wp_enqueue_scripts', 'wp_enqueue_emoji_styles' );
+	remove_action( 'admin_enqueue_scripts', 'wp_enqueue_emoji_styles' );
+	remove_filter( 'the_content_feed', 'wp_staticize_emoji' );
+	remove_filter( 'comment_text_rss', 'wp_staticize_emoji' );
+	remove_filter( 'wp_mail', 'wp_staticize_emoji_for_email' );
+	add_filter( 'emoji_svg_url', '__return_false' );
+}
+add_action( 'init', 'ebookstore_disable_emoji' );

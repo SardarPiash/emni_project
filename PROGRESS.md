@@ -7,8 +7,8 @@ Project root: `C:\projects\ebook-store`
 |-------|------|--------|
 | 0 | Environment check and project setup | ✅ Complete (2026-10-03) |
 | 1 | WordPress install + `.env` configuration | ✅ Complete (2026-10-03) |
-| 2 | WooCommerce core setup + sample eBooks | ✅ Complete (2026-10-03) — waiting for "next" |
-| 3 | Theme, design and responsive pages | ⏳ Not started |
+| 2 | WooCommerce core setup + sample eBooks | ✅ Complete (2026-10-03) |
+| 3 | Theme, design and responsive pages | ✅ Complete (2026-10-03) — waiting for "next" |
 | 4 | Cart, checkout and currency | ⏳ Not started |
 | 5 | Dummy payment gateway | ⏳ Not started |
 | 6 | Email delivery via SMTP | ⏳ Not started |
@@ -95,3 +95,44 @@ Project root: `C:\projects\ebook-store`
 4. **Deploy note:** the approved directory `file://C:/projects/...` is local only; on Hostinger the URL rule is fixed by search-replace, and the file:// rule must be re-added (WooCommerce → Settings → Products → Approved download directories) — add to DEPLOY.md.
 5. Download protection of `woocommerce_uploads/` relies on `.htaccess` → only verifiable on Hostinger (PHP built-in server serves the folder). Force downloads + unguessable file names still apply locally.
 6. WooCommerce created a "Refund and Returns Policy" draft page — kept for the client.
+
+---
+
+## Phase 3 — Theme, design and responsive pages (2026-10-03)
+
+### User decisions (2026-10-03)
+- Keep the **classic** cart/checkout.
+- **Reviews on:** star rating (required) + written review; admin deletes reviews in Products → Reviews (built-in).
+- From now on Claude only **commits**; the user pushes to GitHub.
+
+### Done
+- Storefront 4.6.2 installed as parent (still WooCommerce's official theme; "tested up to WP 6.7" in its header but updated Dec 2025 and works on WP 7.1.2 — no errors).
+- Child theme `ebookstore-child` (style.css header, functions.php, front-page.php, assets/css/main.css, assets/fonts/) — activated. Storefront files untouched; everything via hooks/filters.
+- Design system: all 12 color tokens as CSS variables in `:root`; Storefront Customizer CSS and Google Fonts removed.
+- Fonts: Merriweather (headings) + Inter (body) **self-hosted** (variable woff2, Latin subset, preloaded, `font-display: swap`, system fallbacks) — no Google requests (privacy/UK GDPR + speed). OFL license note in `assets/fonts/LICENSE.txt`.
+- WCAG AA contrast check (all pairs computed):
+  - text on bg 13.8, text on surface 14.8, muted on bg 4.52 / surface 4.83, white on primary 11.5, white on primary-dark 14.9, gold on primary 4.75, primary-dark on gold 6.1, success/error on white 4.5/5.5 — all pass.
+  - **White on accent fails (2.95)** → "Buy Now" uses accent background with **primary-dark text (5.03)**; hover = primary-dark background + white text (14.85) because accent-dark fails with both dark (3.65) and white (4.07) text.
+  - Accent is never used as text color (2.95 on white). Prices use primary.
+  - Form inputs use the `muted` border (4.8:1 ≥ 3:1 for UI controls); the `border` token (1.3:1) only on decorative card edges. Stars use accent-dark (4.07:1 ≥ 3:1); gold is too light for stars on white (2.4).
+  - Visible focus ring everywhere (primary-dark on light, gold on dark areas).
+- Header: store name, menu (Home / All eBooks / My Account — primary + mobile), cart; product search removed.
+- Footer: name + tagline + support email (from `.env`), Shop links, Information links (Privacy/Terms — shown only when a **published** page exists at `LINK_PRIVACY_POLICY` / `LINK_TERMS`), social links (only if set in `.env`), © year + store name. Storefront credit removed.
+- Home page (`front-page.php`, static page "Home"): hero (store name, `STORE_TAGLINE`, "Browse eBooks", 3 feature ticks) + responsive grid via `[products]`.
+- Product cards everywhere (home/shop/category/related): 2:3 cover, title, author, price, short description, **View Details** + **Buy Now**.
+- Product page: cover, title, author, price, short description, **Buy Now** (primary) + Add to Cart (secondary), delivery notes (instant PDF download, format, emailed link, secure checkout), Description + Reviews tabs. Sticky add-to-cart bar and prev/next arrows removed.
+- **Buy Now** (mu-plugin, theme-independent): `?ebook-buy-now=<ID>` → adds to cart once (sold individually — no duplicate error), redirects to checkout; invalid ID → shop with English error notice. Tested.
+- Reviews: enabled, rating required, "verified owner" label, **only verified buyers** can review.
+- Images: catalog thumbnails cropped 2:3 (324×486), regenerated.
+- mu-plugin: `blogdescription` follows new `STORE_TAGLINE`; WordPress emoji script disabled (no requests to s.w.org).
+- Pages renamed: Shop → "All eBooks", My account → "My Account". Default sidebar widgets cleared.
+- **Fixed:** WooCommerce had switched on **"Coming soon" mode** for store pages (visitors saw a placeholder instead of the shop) → `woocommerce_coming_soon=no`, `woocommerce_store_pages_only=no`.
+- Responsive check with headless Edge at 375 / 768 / 1024 / 1440 (375 via exact-width iframe because desktop Edge windows can't go below ~500px): home, shop, product, my account. No horizontal scrolling, tap targets ≥ 44px, base font 16px. Fixed: Storefront header gap, flex offset in product form, breadcrumb spacing, menu alignment, card button wrapping.
+- No external requests on the front end; no PHP errors.
+
+### Open issues / decisions
+1. **Reviews and guest buyers:** "verified buyers only" requires the buyer to be **logged in** — guest-checkout buyers cannot review unless they create an account at checkout. Option: allow anyone to review (with admin approval). Asked the user.
+2. Privacy Policy / Terms links are hidden until those pages are written and published (legal text = client's job). Privacy Policy draft exists; no Terms page yet.
+3. Product page cover fades in (WooCommerce gallery, 0.25s) — headless screenshots catch it mid-fade; real browsers are fine (verified with reduced-motion screenshot).
+4. Twenty Twenty-Five kept as inactive fallback theme (WordPress recommends one default theme); can be removed in Phase 7.
+5. New `.env` key: `STORE_TAGLINE`.
