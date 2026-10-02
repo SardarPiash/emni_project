@@ -17,8 +17,9 @@ defined( 'ABSPATH' ) || exit;
  */
 function ebookstore_env_options() {
 	return array(
-		'blogname'        => 'STORE_NAME',
-		'timezone_string' => 'SITE_TIMEZONE',
+		'blogname'             => 'STORE_NAME',
+		'timezone_string'      => 'SITE_TIMEZONE',
+		'woocommerce_currency' => 'STORE_BASE_CURRENCY',
 	);
 }
 
@@ -66,3 +67,30 @@ add_action(
 		<?php
 	}
 );
+
+/**
+ * Apply the default download limit and expiry from .env
+ * (STORE_DOWNLOAD_LIMIT, STORE_DOWNLOAD_EXPIRY_DAYS) the first time a
+ * product is saved as downloadable, if those fields were left empty.
+ * Afterwards the admin can change them per product as usual.
+ *
+ * @param WC_Product $product Product being saved.
+ */
+function ebookstore_apply_download_defaults( $product ) {
+	if ( ! $product->is_downloadable() || $product->get_meta( '_ebookstore_download_defaults' ) ) {
+		return;
+	}
+
+	$limit  = (string) env( 'STORE_DOWNLOAD_LIMIT', '' );
+	$expiry = (string) env( 'STORE_DOWNLOAD_EXPIRY_DAYS', '' );
+
+	if ( -1 === (int) $product->get_download_limit() && ctype_digit( $limit ) && (int) $limit > 0 ) {
+		$product->set_download_limit( (int) $limit );
+	}
+	if ( -1 === (int) $product->get_download_expiry() && ctype_digit( $expiry ) && (int) $expiry > 0 ) {
+		$product->set_download_expiry( (int) $expiry );
+	}
+
+	$product->update_meta_data( '_ebookstore_download_defaults', 'yes' );
+}
+add_action( 'woocommerce_before_product_object_save', 'ebookstore_apply_download_defaults' );

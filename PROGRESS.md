@@ -6,8 +6,8 @@ Project root: `C:\projects\ebook-store`
 | Phase | Name | Status |
 |-------|------|--------|
 | 0 | Environment check and project setup | ✅ Complete (2026-10-03) |
-| 1 | WordPress install + `.env` configuration | ✅ Complete (2026-10-03) — waiting for "next" |
-| 2 | WooCommerce core setup + sample eBooks | ⏳ Not started |
+| 1 | WordPress install + `.env` configuration | ✅ Complete (2026-10-03) |
+| 2 | WooCommerce core setup + sample eBooks | ✅ Complete (2026-10-03) — waiting for "next" |
 | 3 | Theme, design and responsive pages | ⏳ Not started |
 | 4 | Cart, checkout and currency | ⏳ Not started |
 | 5 | Dummy payment gateway | ⏳ Not started |
@@ -72,3 +72,26 @@ Project root: `C:\projects\ebook-store`
 1. **Collation:** WordPress automatically upgrades `utf8mb4_unicode_ci` to `utf8mb4_unicode_520_ci` for its tables when the server supports it. MariaDB (Hostinger) supports this collation, so the export stays portable. The problematic `utf8mb4_0900_ai_ci` is not used. Re-check in Phase 7 before export.
 2. Admin email is a placeholder (`support@example.com`) — user should change it to a real address in Settings → General (or tell Claude).
 3. `.env` deny rule and other `.htaccess` rules can only be verified on Hostinger (PHP built-in server ignores `.htaccess`).
+
+---
+
+## Phase 2 — WooCommerce core setup + sample eBooks (2026-10-03)
+
+### Done
+- Compatibility research (2026-10-03): WooCommerce 11.1.2; CURCY 2.2.17 (tested WP 7.1.2, HPOS conflict fixed in 2.2.11, free auto-detect by IP, recent XSS fix); WP Mail SMTP 4.10.0 (email log is Pro-only → use WP Mail Logging 1.17.0 in Phase 6); Storefront 4.6.2.
+- WooCommerce 11.1.2 installed + activated, `wp plugin verify-checksums` passes.
+- HPOS enabled (`wp wc hpos enable`, compatibility/sync mode off, 0 orders).
+- Settings: store base US:NY; sell to US + GB only; shipping disabled; base currency USD (follows `STORE_BASE_CURRENCY` via mu-plugin filter); taxes off; guest checkout on; account creation optional at checkout (not on My Account page); downloads = Force downloads, grant access after payment, hash in filename, no redirect fallback, no login required; onboarding wizard/task lists hidden; tracking + marketplace suggestions off.
+- Approved download directories: mode enabled, only `uploads/woocommerce_uploads/` (file:// path + URL). WooCommerce's `.htaccess` + `index.html` exist in that folder.
+- Cart and Checkout pages switched from blocks to classic shortcodes `[woocommerce_cart]` / `[woocommerce_checkout]`.
+- mu-plugin: `woocommerce_currency` follows `.env`; new hook applies `STORE_DOWNLOAD_LIMIT` / `STORE_DOWNLOAD_EXPIRY_DAYS` the first time a product is saved as downloadable with empty limit/expiry (meta flag `_ebookstore_download_defaults` so later manual edits are kept).
+- Sample content: `sample-content/books.json`, `generate.php` (PDF + 800×1200 cover via GD), `create-products.php` (idempotent). 6 products created (IDs 14–24), each Virtual + Downloadable + Sold individually, price, category, cover, PDF with unguessable name in `woocommerce_uploads/2026/10/`, download limit 5, expiry 30 days. PDFs validated (xref + 5 pages).
+- Tests: shop lists 6 products; product page, category page, cart, checkout, my-account return 200; add to cart works; quantity input hidden; classic cart + classic checkout render; no shipping section; only US/GB countries.
+
+### Open issues / decisions
+1. **Classic vs block checkout** — classic chosen per plan (best compatibility with CURCY + dummy gateway). User asked to confirm.
+2. **Taxes are off.** UK VAT / US sales tax on digital goods may be required — the client's business decision; can be enabled later in WooCommerce → Settings → Tax.
+3. **Store address** set to US:NY (matches timezone) — only matters for tax; change in WooCommerce → Settings → General if needed.
+4. **Deploy note:** the approved directory `file://C:/projects/...` is local only; on Hostinger the URL rule is fixed by search-replace, and the file:// rule must be re-added (WooCommerce → Settings → Products → Approved download directories) — add to DEPLOY.md.
+5. Download protection of `woocommerce_uploads/` relies on `.htaccess` → only verifiable on Hostinger (PHP built-in server serves the folder). Force downloads + unguessable file names still apply locally.
+6. WooCommerce created a "Refund and Returns Policy" draft page — kept for the client.

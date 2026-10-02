@@ -25,7 +25,7 @@ from `C:\projects\ebook-store` in PowerShell (`wp-cli.yml` points WP-CLI to `pub
 
 | Slug | Version | Install command |
 |------|---------|-----------------|
-| _(none yet — WooCommerce comes in Phase 2)_ | | |
+| woocommerce | 11.1.2 | `wp plugin install woocommerce --version=11.1.2 --activate` |
 
 ## Our own code (in git)
 
@@ -34,3 +34,10 @@ from `C:\projects\ebook-store` in PowerShell (`wp-cli.yml` points WP-CLI to `pub
 | `public/wp-content/mu-plugins/ebook-store-core.php` | must-use plugin |
 | `public/wp-content/themes/ebookstore-child/` | child theme (Phase 3) |
 | `public/wp-content/plugins/ebook-dummy-gateway/` | test-only gateway (Phase 5) |
+
+## Sample content (in git, local testing only)
+
+```powershell
+php sample-content/generate.php              # PDFs + 2:3 covers from books.json
+wp eval-file sample-content/create-products.php   # creates the 6 sample products (skips existing)
+```

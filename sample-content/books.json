@@ -1,0 +1,68 @@
+[
+  {
+    "slug": "the-quiet-productivity-method",
+    "title": "The Quiet Productivity Method",
+    "author": "Emma Caldwell",
+    "category": "Productivity",
+    "color": "#1F3A5F",
+    "price": "9.99",
+    "short": "A calm, practical system for doing your best work without burning out.",
+    "description": "The Quiet Productivity Method shows you how to plan your week, protect your focus and finish what matters, without endless to-do lists or late nights. Each chapter ends with a short exercise you can use the same day.",
+    "chapters": ["Why Busy Is Not Productive", "Planning a Calm Week", "Deep Work in Short Blocks", "Saying No Without Guilt"]
+  },
+  {
+    "slug": "personal-finance-made-simple",
+    "title": "Personal Finance Made Simple",
+    "author": "Daniel Brooks",
+    "category": "Finance",
+    "color": "#2F5D50",
+    "price": "12.99",
+    "short": "Budgeting, saving and investing explained in plain English.",
+    "description": "Personal Finance Made Simple walks you through building a budget you can keep, creating an emergency fund, paying down debt and starting to invest. No jargon, just clear steps and real-world examples.",
+    "chapters": ["Know Where Your Money Goes", "A Budget You Can Keep", "Beating Debt", "Your First Investments"]
+  },
+  {
+    "slug": "everyday-home-cooking",
+    "title": "Everyday Home Cooking",
+    "author": "Sophie Turner",
+    "category": "Cooking",
+    "color": "#7A3B2E",
+    "price": "14.99",
+    "short": "Forty simple, delicious recipes for busy weeknights.",
+    "description": "Everyday Home Cooking collects forty reliable recipes that use simple ingredients and take thirty minutes or less. Includes a pantry checklist, a weekly meal planner and tips for cooking once and eating twice.",
+    "chapters": ["Stocking a Smart Pantry", "Thirty-Minute Dinners", "One-Pan Meals", "Easy Desserts"]
+  },
+  {
+    "slug": "mindful-mornings",
+    "title": "Mindful Mornings",
+    "author": "Grace Harper",
+    "category": "Wellness",
+    "color": "#4A3F6B",
+    "price": "7.99",
+    "short": "Start every day with clarity, energy and intention.",
+    "description": "Mindful Mornings offers short routines for breathing, movement, journaling and planning that fit into fifteen minutes. Build a morning habit that sets a positive tone for the whole day.",
+    "chapters": ["The Power of the First Hour", "Five-Minute Breathing", "Journaling Prompts", "Building the Habit"]
+  },
+  {
+    "slug": "python-in-30-days",
+    "title": "Python in 30 Days",
+    "author": "Michael Grant",
+    "category": "Technology",
+    "color": "#152842",
+    "price": "19.99",
+    "short": "Learn programming step by step with one short lesson per day.",
+    "description": "Python in 30 Days takes complete beginners from their first line of code to small, useful programs. Every day has a focused lesson, worked examples and a mini project to practice what you learned.",
+    "chapters": ["Your First Program", "Variables and Data Types", "Loops and Functions", "Building a Small Project"]
+  },
+  {
+    "slug": "the-art-of-short-stories",
+    "title": "The Art of Short Stories",
+    "author": "Oliver Bennett",
+    "category": "Writing",
+    "color": "#8C4A3A",
+    "price": "11.99",
+    "short": "Craft memorable short fiction, from first idea to final draft.",
+    "description": "The Art of Short Stories explains how to find ideas, build characters, write strong openings and endings, and revise with confidence. Includes writing prompts and annotated example stories.",
+    "chapters": ["Finding the Story", "Characters Readers Remember", "Openings and Endings", "Revising Like a Pro"]
+  }
+]
