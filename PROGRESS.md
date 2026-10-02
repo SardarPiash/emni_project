@@ -10,8 +10,8 @@ Project root: `C:\projects\ebook-store`
 | 2 | WooCommerce core setup + sample eBooks | ✅ Complete (2026-10-03) |
 | 3 | Theme, design and responsive pages | ✅ Complete (2026-10-03) |
 | 4 | Cart, checkout and currency | ✅ Complete (2026-10-03) |
-| 5 | Dummy payment gateway | ✅ Complete (2026-10-03) — waiting for "next" |
-| 6 | Email delivery via SMTP | ⏳ Not started |
+| 5 | Dummy payment gateway | ✅ Complete (2026-10-03) |
+| 6 | Email delivery via SMTP | 🟡 Set up (2026-10-03) — waiting for real SMTP credentials in .env, then final send test |
 | 7 | QA, security and Hostinger deployment guide | ⏳ Not started |
 
 ---
@@ -201,3 +201,20 @@ Project root: `C:\projects\ebook-store`
 ### Open issues / decisions
 1. **Emails fail to send** ("Could not instantiate mail function") — no mail server on this PC yet. Phase 6 sets up SMTP. WooCommerce attempted: Completed order + New order (success), Failed order (failure).
 2. WordPress automatic background updates are on (core minor/security updates ran once) — fine; noted for Phase 7.
+
+---
+
+## Phase 6 — Email delivery via SMTP (2026-10-03, in progress)
+
+### Done
+- WP Mail SMTP 4.10.0 (email log is Pro-only) + WP Mail Logging 1.17.0 installed, checksums verified.
+- WP Mail SMTP is configured **only** through the `WPMS_*` constants in `wp-config.php` (all values from `.env`); verified every setting reports "from constant", **no password in the database**. Mailer SMTP, from address/name forced, return-path set.
+- WooCommerce emails: brand colours (base #1F3A5F, background #FAF7F2, body #FFFFFF, text #1F2933, footer #6B7280), footer `{site_title}` + `{site_url}` + "Questions? Email us at <STORE_SUPPORT_EMAIL>".
+- Completed order (the download email): subject "Your eBook from {site_title} is ready to download", heading "Your eBook is ready", Downloads table with link + expiry, closing text. Failed order (customer): "No money was taken…" text, no download links.
+- mu-plugin: WooCommerce sender name/address follow `MAIL_FROM_NAME` / `MAIL_FROM_EMAIL`; `admin_email` follows the new **`STORE_ADMIN_EMAIL`** (store notifications); customer emails have `Reply-to: <STORE_SUPPORT_EMAIL>`.
+- WP Mail Logging: logs auto-deleted after 30 days (they contain download links).
+- Test purchases #38 (success, USD) and #39 (fail, GBP) → 4 emails generated and logged correctly: customer "ready to download" with 1 download link; admin "new order"; customer "unsuccessful" with 0 download links; admin "order failed". Rendered and checked visually. Sending failed with "SMTP Error: Could not authenticate" (placeholder credentials) — proves the SMTP path is used.
+- Mailpit not needed: the email log shows every email locally.
+
+### Waiting for the user
+- Fill real SMTP values in `.env` (Gmail App Password now, or Hostinger email later) + real `STORE_ADMIN_EMAIL` / `STORE_SUPPORT_EMAIL`. Then: test email + real purchase with own address.

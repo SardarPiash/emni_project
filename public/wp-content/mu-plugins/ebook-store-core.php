@@ -17,10 +17,14 @@ defined( 'ABSPATH' ) || exit;
  */
 function ebookstore_env_options() {
 	return array(
-		'blogname'             => 'STORE_NAME',
-		'blogdescription'      => 'STORE_TAGLINE',
-		'timezone_string'      => 'SITE_TIMEZONE',
-		'woocommerce_currency' => 'STORE_BASE_CURRENCY',
+		'blogname'                       => 'STORE_NAME',
+		'blogdescription'                => 'STORE_TAGLINE',
+		'timezone_string'                => 'SITE_TIMEZONE',
+		'woocommerce_currency'           => 'STORE_BASE_CURRENCY',
+		// Email sender + store notifications (new / failed orders).
+		'woocommerce_email_from_name'    => 'MAIL_FROM_NAME',
+		'woocommerce_email_from_address' => 'MAIL_FROM_EMAIL',
+		'admin_email'                    => 'STORE_ADMIN_EMAIL',
 	);
 }
 
@@ -306,3 +310,46 @@ function ebookstore_download_filename( $filename, $product_id ) {
 	return ( '' !== $name ? $name : 'ebook' ) . ( $extension ? '.' . $extension : '' );
 }
 add_filter( 'woocommerce_file_download_filename', 'ebookstore_download_filename', 10, 2 );
+
+/* -------------------------------------------------------------------------
+ * Emails
+ * ---------------------------------------------------------------------- */
+
+/**
+ * Customer emails: replies go to the support address (STORE_SUPPORT_EMAIL),
+ * not to the no-reply sender address.
+ *
+ * @param string $headers  Email headers.
+ * @param string $email_id WooCommerce email ID.
+ * @param mixed  $object   Order or other object.
+ * @param mixed  $email    WC_Email instance.
+ * @return string
+ */
+function ebookstore_email_reply_to( $headers, $email_id, $object = null, $email = null ) {
+	$support = sanitize_email( (string) env( 'STORE_SUPPORT_EMAIL', '' ) );
+	if ( ! $support || ! ( $email instanceof WC_Email ) || ! $email->is_customer_email() ) {
+		return $headers;
+	}
+	$headers = preg_replace( '/^Reply-to:.*$\R?/mi', '', (string) $headers );
+	return $headers . 'Reply-to: ' . wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES ) . ' <' . $support . ">\r\n";
+}
+add_filter( 'woocommerce_email_headers', 'ebookstore_email_reply_to', 20, 4 );
+
+/**
+ * Add the support address to the email footer.
+ *
+ * @param string $text Footer text.
+ * @return string
+ */
+function ebookstore_email_footer_text( $text ) {
+	$support = sanitize_email( (string) env( 'STORE_SUPPORT_EMAIL', '' ) );
+	if ( $support ) {
+		$text .= '<br />' . sprintf(
+			/* translators: %s: support email address */
+			esc_html__( 'Questions? Email us at %s', 'ebook-store' ),
+			'<a href="mailto:' . esc_attr( $support ) . '">' . esc_html( $support ) . '</a>'
+		);
+	}
+	return $text;
+}
+add_filter( 'woocommerce_email_footer_text', 'ebookstore_email_footer_text', 20 );
