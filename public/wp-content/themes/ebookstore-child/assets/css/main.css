@@ -1804,3 +1804,113 @@ p.woocommerce-thankyou-order-received {
 .page .entry-content h3 {
 	font-size: 1.125rem;
 }
+
+/* ==========================================================================
+   Shop toolbar: "Showing all X results" left, "Sort by [dropdown]" right
+   ========================================================================== */
+
+/* Smaller gap under page titles (Storefront: ~6em) on shop, cart, checkout, account. */
+.storefront-full-width-content .woocommerce-products-header,
+.storefront-full-width-content.woocommerce-cart .entry-header,
+.storefront-full-width-content.woocommerce-checkout .entry-header,
+.storefront-full-width-content.woocommerce-account .entry-header {
+	padding-bottom: 2rem;
+}
+
+.storefront-sorting {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.75rem;
+	margin: 0 0 1.5rem;
+	padding: 0.75rem 1rem;
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius);
+	background: var(--color-surface);
+	font-size: 1rem;
+}
+
+.storefront-sorting::before,
+.storefront-sorting::after {
+	display: none;
+}
+
+.storefront-sorting .woocommerce-result-count {
+	order: -1;
+	float: none;
+	margin: 0 auto 0 0;
+	padding: 0;
+	color: var(--color-muted);
+	font-size: 0.9375rem;
+}
+
+.ebook-sort-label {
+	color: var(--color-text);
+	font-size: 0.9375rem;
+	font-weight: 600;
+}
+
+.storefront-sorting .woocommerce-ordering {
+	float: none;
+	margin: 0;
+	padding: 0;
+}
+
+/* Dropdown: brand border + chevron drawn with two gradients (uses colour tokens). */
+.storefront-sorting select.orderby {
+	width: auto;
+	min-width: 15rem;
+	min-height: var(--tap);
+	padding: 0.5rem 2.75rem 0.5rem 0.875rem;
+	border: 1px solid var(--color-muted);
+	border-radius: var(--radius-small);
+	background-color: var(--color-surface);
+	background-image:
+		linear-gradient(45deg, transparent 50%, var(--color-primary) 50%),
+		linear-gradient(135deg, var(--color-primary) 50%, transparent 50%);
+	background-position:
+		calc(100% - 1.25rem) 50%,
+		calc(100% - 0.9rem) 50%;
+	background-size: 0.375rem 0.375rem, 0.375rem 0.375rem;
+	background-repeat: no-repeat;
+	color: var(--color-text);
+	font-size: 0.9375rem;
+	font-weight: 500;
+	cursor: pointer;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	appearance: none;
+}
+
+.storefront-sorting select.orderby:hover {
+	border-color: var(--color-primary);
+}
+
+/* Pagination (only when there are more than 12 eBooks) sits on its own line. */
+.storefront-sorting .woocommerce-pagination {
+	flex-basis: 100%;
+	float: none;
+	margin: 0;
+	text-align: center;
+}
+
+@media (max-width: 599px) {
+	.storefront-sorting .woocommerce-result-count {
+		flex-basis: 100%;
+	}
+
+	.storefront-sorting .woocommerce-ordering {
+		flex: 1 1 auto;
+	}
+
+	.storefront-sorting select.orderby {
+		width: 100%;
+		min-width: 0;
+	}
+}
+
+/* Pagination below the grid (no toolbar box there). */
+.site-main > .woocommerce-pagination {
+	margin: 0 0 2rem;
+	text-align: center;
+}

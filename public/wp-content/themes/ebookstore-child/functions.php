@@ -114,6 +114,13 @@ add_action(
 		remove_action( 'storefront_after_footer', 'storefront_sticky_single_add_to_cart', 999 );
 		remove_action( 'woocommerce_after_single_product_summary', 'storefront_single_product_pagination', 30 );
 
+		// Shop toolbar only above the grid (Storefront repeats sorting + result count below it).
+		remove_action( 'woocommerce_after_shop_loop', 'storefront_sorting_wrapper', 9 );
+		remove_action( 'woocommerce_after_shop_loop', 'woocommerce_catalog_ordering', 10 );
+		remove_action( 'woocommerce_after_shop_loop', 'woocommerce_result_count', 20 );
+		remove_action( 'woocommerce_after_shop_loop', 'storefront_sorting_wrapper_close', 31 );
+		add_action( 'woocommerce_before_shop_loop', 'ebookstore_child_sort_label', 9 );
+
 		// Product cards: author + short description + View Details / Buy Now.
 		remove_action( 'woocommerce_after_shop_loop_item', 'woocommerce_template_loop_add_to_cart', 10 );
 		add_action( 'woocommerce_after_shop_loop_item_title', 'ebookstore_child_loop_author', 4 );
@@ -511,3 +518,14 @@ add_action(
 	},
 	100
 );
+
+/**
+ * Visible "Sort by" text next to the sorting dropdown (the dropdown keeps
+ * WooCommerce's own aria-label for screen readers).
+ */
+function ebookstore_child_sort_label() {
+	if ( ! woocommerce_products_will_display() ) {
+		return;
+	}
+	echo '<span class="ebook-sort-label" aria-hidden="true">' . esc_html__( 'Sort by', 'ebookstore-child' ) . '</span>';
+}
