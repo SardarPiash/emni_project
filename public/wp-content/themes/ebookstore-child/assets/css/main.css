@@ -1714,3 +1714,83 @@ table.cart td.product-remove a.remove::before {
 .woocommerce-checkout #order_review .ebook-currency--inline {
 	margin-bottom: 1rem;
 }
+
+/* Dummy gateway (TEST ONLY) choices */
+.ebook-dummy-fields {
+	margin: 0.5rem 0 0;
+	padding: 0;
+	border: 0;
+}
+
+.ebook-dummy-fields .form-row {
+	margin: 0 0 0.25rem;
+}
+
+.ebook-dummy-fields label {
+	display: flex !important;
+	align-items: center;
+	gap: 0.5rem;
+	min-height: var(--tap);
+	font-weight: 500;
+	cursor: pointer;
+}
+
+/* Order received: downloads table */
+.woocommerce-order-downloads {
+	margin-bottom: 2rem;
+}
+
+.woocommerce-order-downloads .download-file .button,
+.woocommerce-MyAccount-downloads .download-file .button {
+	background: var(--color-accent);
+	border-color: var(--color-accent);
+	color: var(--color-primary-dark);
+}
+
+.woocommerce-order-downloads .download-file .button:hover,
+.woocommerce-MyAccount-downloads .download-file .button:hover {
+	background: var(--color-primary-dark);
+	border-color: var(--color-primary-dark);
+	color: var(--color-surface);
+}
+
+/* Order received: summary (number, date, total, payment method) */
+ul.woocommerce-order-overview {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+	gap: 1rem;
+	margin: 0 0 2rem;
+	padding: 1.25rem;
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius);
+	background: var(--color-surface);
+	list-style: none;
+}
+
+ul.woocommerce-order-overview li {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	color: var(--color-muted);
+	font-size: 0.8125rem;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+ul.woocommerce-order-overview li strong {
+	display: block;
+	margin-top: 0.25rem;
+	color: var(--color-primary);
+	font-size: 1.0625rem;
+	text-transform: none;
+	letter-spacing: 0;
+}
+
+p.woocommerce-thankyou-order-received {
+	padding: 1rem 1.25rem;
+	border-left: 6px solid var(--color-success);
+	border-radius: var(--radius-small);
+	background: var(--color-surface);
+	font-size: 1.125rem;
+	font-weight: 600;
+}

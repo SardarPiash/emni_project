@@ -286,3 +286,23 @@ function ebookstore_refresh_cart_totals() {
 	WC()->cart->calculate_totals();
 }
 add_action( 'wp_loaded', 'ebookstore_refresh_cart_totals', 40 );
+
+/**
+ * Downloaded files get a clean name based on the eBook title
+ * ("Python in 30 Days.pdf") instead of the stored file name, which
+ * contains a random string and should stay private.
+ *
+ * @param string $filename   Original file name.
+ * @param int    $product_id Product ID.
+ * @return string
+ */
+function ebookstore_download_filename( $filename, $product_id ) {
+	$product = wc_get_product( $product_id );
+	if ( ! $product ) {
+		return $filename;
+	}
+	$extension = strtolower( pathinfo( $filename, PATHINFO_EXTENSION ) );
+	$name      = trim( preg_replace( '/[^A-Za-z0-9 ._()-]+/', '', $product->get_name() ) );
+	return ( '' !== $name ? $name : 'ebook' ) . ( $extension ? '.' . $extension : '' );
+}
+add_filter( 'woocommerce_file_download_filename', 'ebookstore_download_filename', 10, 2 );

@@ -9,8 +9,8 @@ Project root: `C:\projects\ebook-store`
 | 1 | WordPress install + `.env` configuration | ✅ Complete (2026-10-03) |
 | 2 | WooCommerce core setup + sample eBooks | ✅ Complete (2026-10-03) |
 | 3 | Theme, design and responsive pages | ✅ Complete (2026-10-03) |
-| 4 | Cart, checkout and currency | ✅ Complete (2026-10-03) — waiting for "next" |
-| 5 | Dummy payment gateway | ⏳ Not started |
+| 4 | Cart, checkout and currency | ✅ Complete (2026-10-03) |
+| 5 | Dummy payment gateway | ✅ Complete (2026-10-03) — waiting for "next" |
 | 6 | Email delivery via SMTP | ⏳ Not started |
 | 7 | QA, security and Hostinger deployment guide | ⏳ Not started |
 
@@ -176,3 +176,28 @@ Project root: `C:\projects\ebook-store`
   - Tested: ECB fetch (1 USD = 0.757532 GBP, ECB 2026-10-02), manual 0.80 → £6.39, invalid/empty input rejected, back to automatic → £6.05, logged-out POST 400, missing nonce 403.
 - Cart totals recalculated on every page load (header cart showed totals from the old rate).
 - Phone nav fixes (Menu button icon), checkout switcher placement, link underline in content.
+
+---
+
+## Phase 5 — Dummy payment gateway (2026-10-03)
+
+### Done
+- Standalone plugin `public/wp-content/plugins/ebook-dummy-gateway/` (`ebook-dummy-gateway.php`, `includes/class-wc-gateway-ebook-dummy.php`, `README.md`), activated.
+- Name "eBook Dummy Payment Gateway (TEST ONLY)"; checkout title "Test payment (TEST ONLY — no real money)"; extends `WC_Payment_Gateway`; classic checkout; declares HPOS compatible (blocks: not integrated).
+- Customer chooses **Simulate successful payment** / **Simulate failed payment** (validated).
+- Success → `payment_complete('DUMMY-…')` → virtual/downloadable order **Completed**, download permission granted, cart emptied, redirect to order-received page.
+- Failure → status **Failed**, error "Payment failed. Your card was not charged…", **no download permission**; next attempt creates a new order (failed one stays on record).
+- `DUMMY_GATEWAY_ENABLED=false` → gateway not registered at all (not at checkout, not in settings). Admin notice "Dummy payment gateway is active — disable before going live." while enabled.
+- mu-plugin: downloaded file name = eBook title ("Python in 30 Days.pdf") instead of the stored random name.
+- Styling: gateway choices, downloads table (accent button), order overview cards, success message.
+
+### Tests (all passed)
+- Order #35: Buy Now → GBP → success → **completed, GBP 15.14**, 1 download permission (limit 5, expiry 30 days → Nov 1, 2026). Thank-you page shows Downloads table; download returns `application/pdf`, identical to the source PDF; tampered key → 404.
+- Order #36: USD → fail → **failed, USD 7.99**, 0 download permissions, error notice shown.
+- `.env` switch false → gateway gone from checkout, settings and admin notice; true → back.
+- Plugin deactivated → home, shop, product, cart, account, order-received all 200, no PHP errors; reactivated.
+- Test orders #35 (success.buyer@example.com) and #36 (failed.buyer@example.com) kept as examples — can be deleted in WooCommerce → Orders.
+
+### Open issues / decisions
+1. **Emails fail to send** ("Could not instantiate mail function") — no mail server on this PC yet. Phase 6 sets up SMTP. WooCommerce attempted: Completed order + New order (success), Failed order (failure).
+2. WordPress automatic background updates are on (core minor/security updates ran once) — fine; noted for Phase 7.

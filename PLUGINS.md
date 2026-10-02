@@ -33,9 +33,9 @@ from `C:\projects\ebook-store` in PowerShell (`wp-cli.yml` points WP-CLI to `pub
 
 | Path | Type |
 |------|------|
-| `public/wp-content/mu-plugins/ebook-store-core.php` | must-use plugin |
+| `public/wp-content/mu-plugins/ebook-store-core.php` + `ebook-store-core/exchange-rate.php` | must-use plugin |
 | `public/wp-content/themes/ebookstore-child/` | child theme (active) |
-| `public/wp-content/plugins/ebook-dummy-gateway/` | test-only gateway (Phase 5) |
+| `public/wp-content/plugins/ebook-dummy-gateway/` | test-only gateway — active while `DUMMY_GATEWAY_ENABLED=true`; see its README.md to remove |
 
 ## Sample content (in git, local testing only)
 
