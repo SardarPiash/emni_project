@@ -27,7 +27,7 @@ from `C:\projects\ebook-store` in PowerShell (`wp-cli.yml` points WP-CLI to `pub
 | Slug | Version | Install command |
 |------|---------|-----------------|
 | woocommerce | 11.1.2 | `wp plugin install woocommerce --version=11.1.2 --activate` |
-| woo-multi-currency (CURCY) | 2.2.17 | `wp plugin install woo-multi-currency --version=2.2.17 --activate` — currencies + rate are forced from `.env` by the mu-plugin; other settings in WooCommerce → Multi Currency |
+| woo-multi-currency (CURCY) | 2.2.17 | `wp plugin install woo-multi-currency --version=2.2.17 --activate` — currencies + rate are forced from `.env` by the mu-plugin; other settings in Multi Currency (admin menu) |
 | wp-mail-smtp | 4.10.0 | `wp plugin install wp-mail-smtp --version=4.10.0 --activate` — configured only by WPMS_* constants in wp-config.php (from .env); no secrets in the database |
 | wp-mail-logging | 1.17.0 | `wp plugin install wp-mail-logging --version=1.17.0 --activate` — email log (admin → WP Mail Logging); logs auto-deleted after 30 days |
 

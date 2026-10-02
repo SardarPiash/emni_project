@@ -11,8 +11,8 @@ Project root: `C:\projects\ebook-store`
 | 3 | Theme, design and responsive pages | ✅ Complete (2026-10-03) |
 | 4 | Cart, checkout and currency | ✅ Complete (2026-10-03) |
 | 5 | Dummy payment gateway | ✅ Complete (2026-10-03) |
-| 6 | Email delivery via SMTP | 🟡 Set up (2026-10-03) — waiting for real SMTP credentials in .env, then final send test |
-| 7 | QA, security and Hostinger deployment guide | ⏳ Not started |
+| 6 | Email delivery via SMTP | 🟡 Set up + tested via email log (2026-10-03) — real send test waits for SMTP credentials in .env |
+| 7 | QA, security and Hostinger deployment guide | ✅ Complete (2026-10-03) — post-deploy checks run on Hostinger (DEPLOY.md §9) |
 
 ---
 
@@ -159,7 +159,7 @@ Project root: `C:\projects\ebook-store`
 - Screenshots: checkout 1440 + 500, cart 1440 + 500 (phone frame can't keep the cart cookie → 500px real window used).
 
 ### Open issues / decisions
-1. **Auto-detect privacy:** without a MaxMind key, WooCommerce geolocation may look up the visitor IP with an external service. Mentioned in the sample privacy text only generally — the client should review. Can be switched off in WooCommerce → Multi Currency → Location.
+1. **Auto-detect privacy:** without a MaxMind key, WooCommerce geolocation may look up the visitor IP with an external service. Mentioned in the sample privacy text only generally — the client should review. Can be switched off in **Multi Currency** (admin menu) → Location.
 2. On Hostinger, geolocation needs either a free MaxMind license key (WooCommerce → Settings → Integration) or keeps using WooCommerce's fallback lookup.
 3. Exchange rate is fixed (from `.env`); automatic rate updates are a CURCY Pro feature.
 4. Checkout shows "no payment methods" until the dummy gateway (Phase 5).
@@ -218,3 +218,53 @@ Project root: `C:\projects\ebook-store`
 
 ### Waiting for the user
 - Fill real SMTP values in `.env` (Gmail App Password now, or Hostinger email later) + real `STORE_ADMIN_EMAIL` / `STORE_SUPPORT_EMAIL`. Then: test email + real purchase with own address.
+
+---
+
+## Phase 7 — QA, security and Hostinger deployment guide (2026-10-03)
+
+### End-to-end tests (all passed)
+- Orders: USD success #38 (completed), USD fail #36 (failed), GBP success #35 (completed), GBP fail #39 (failed) — all guest checkout; #40 success **with "Create an account"** (customer logged in automatically, eBook listed in My Account → Downloads, billing form only 4 fields); #42 regression purchase after hardening.
+- Downloads: 5 downloads OK, 6th → 403 "Sorry, you have reached your download limit for this file"; expired access → 403 "Sorry, this download has expired"; tampered key / wrong order key → 404. File served as "Python in 30 Days.pdf", byte-identical to the source.
+- Responsive: home 375/768/1024/1440, shop 768, product 375/1440, cart 500/1440, checkout 500/1440, order received 500/1024, My Account 500, Terms 375. Legal page headings reduced.
+- Language: rendered pages + database (posts, meta, options, comments, terms, email log) scanned — 0 Bengali characters, no lorem/placeholder/dummy text, `<html lang="en-US">`. Only intentional text: "Sample text: replace…" notes on Privacy/Terms (user decision) and "SAMPLE EBOOK" on sample covers.
+
+### Security
+- Admin login name no longer public: REST `/wp/v2/users` hidden for visitors (admins with nonce still 200), author archives + `?author=N` → 301 home, admin display name "Store Admin". Verified login name appears nowhere in public HTML.
+- XML-RPC disabled (405 "services are disabled"), X-Pingback + RSD removed; WordPress/WooCommerce generator tags removed.
+- Debug log moved **outside the web root**: `WP_DEBUG_LOG=true` now writes `../logs/debug.log` (`/logs/` git-ignored); old URL 404.
+- `.htaccess` (Hostinger): `Options -Indexes`; deny `wp-config.php`, `xmlrpc.php`, `readme.html`, `license.txt`, `wp-config-sample.php`, `*.log`, `*.sql(.gz)`, `*.bak`, `*.swp`; existing `.env` deny rule.
+- Avatars off (no Gravatar requests). WooCommerce **Order Attribution** off (it set `sbjs_*` tracking cookies on every visitor — consent issue under UK PECR/GDPR; privacy text says essential cookies only). New visitors now get only `wmc_current_currency`.
+- `DISALLOW_FILE_EDIT=true`; `.env` outside web root (404); admin user not "admin"; strong generated passwords (admin 20, DB 32, salts 64 chars).
+- Everything up to date: WordPress 7.1.2, WooCommerce 11.1.2, CURCY 2.2.17, WP Mail SMTP 4.10.0, WP Mail Logging 1.17.0, Storefront 4.6.2 (`wp core verify-checksums` + `wp plugin verify-checksums --all` pass).
+- Local-only quirk: PHP's built-in server executes `/../config/env-loader.php` (no output, no secrets); Apache/LiteSpeed on Hostinger normalises `../` — in DEPLOY.md post-deploy checks.
+
+### Performance
+- Pages ≈ 490–580 KB text uncompressed (≈ ¼ with Hostinger gzip). Removed CURCY's unused switcher CSS + flag sprites and the Order Attribution script. Fonts self-hosted + preloaded. Images: 2:3 covers ~60 KB JPEG; WordPress generates sized versions. OPcache is on at Hostinger (off on this PC — user has not approved enabling it).
+
+### Deployment
+- `bin/export-db.ps1`: MariaDB-compatible dump to `backups/` (git-ignored): `--set-gtid-purged=OFF` (MySQL GTID line would fail on Hostinger), `--no-tablespaces`, utf8mb4, `--result-file` (PowerShell 5 piping would corrupt UTF-8/add BOM). Verified: 54 tables, 0 GTID lines, 0 `utf8mb4_0900`, all tables `utf8mb4_unicode_520_ci` (MariaDB-compatible), £ and — intact, no BOM. (Not test-imported into MariaDB — none installed locally.)
+- `DEPLOY.md`: folder layout, PHP 8.3 + options, DB, export, zip, production `.env` table, upload, phpMyAdmin import, search-replace (SSH or plugin), approved download directory, SSL, first-login settings, email + DNS, MaxMind, LiteSpeed Cache + currency cookie, cron, pre-launch checklist, post-deploy checks, removing the dummy gateway, updating code later (never overwrite the live DB), rebuilding locally from git.
+- Final `.gitignore` check: `.env`, `.env.production`, `backups/`, `logs/`, uploads, core and third-party plugins/themes ignored; no secret found in any tracked file.
+
+### Open items for the user
+1. Phase 6 real send test — put Gmail App Password (or Hostinger mailbox) into `.env`, then say "done".
+2. Sample content (6 eBooks, test orders #35–#42, test customer `account.tester`) — keep for now or delete? (asked)
+3. Before launch (DEPLOY.md §8.6): real Privacy/Terms text, real eBooks, taxes decision, store address, real payment gateway, then `DUMMY_GATEWAY_ENABLED=false`.
+4. Optional: enable OPcache locally (pages ~1.2 s → ~0.2 s).
+
+---
+
+## Final summary (2026-10-03)
+
+Working locally at `http://localhost:8080` (native Windows: PHP 8.3, MySQL 9.7, WP-CLI `wp server`):
+
+- English eBook store: WordPress 7.1.2 + WooCommerce 11.1.2 (HPOS), Storefront + `ebookstore-child` design (brand tokens, self-hosted fonts, WCAG AA), responsive 1/2/3–4 columns.
+- Products: Virtual + Downloadable + Sold individually PDFs; Buy Now → checkout; reviews (rating required, admin approval).
+- USD/GBP via CURCY: switchers in nav bar, product page, cart, checkout; IP auto-detect; pay in selected currency; exchange rate from the ECB daily or manual (WooCommerce → Exchange Rate), `.env` fallback.
+- Checkout: first name, last name, email, country; "You will be charged in …" notice.
+- Delivery: download on thank-you page + My Account + email link; limit 5 / 30 days from `.env`; failed orders get nothing.
+- Dummy gateway plugin (TEST ONLY, removable, `.env` switch).
+- Email via WP Mail SMTP (constants from `.env`), WP Mail Logging, branded templates.
+- All secrets/changeable values in `.env`; custom code only in the child theme, the mu-plugin (+ `ebook-store-core/exchange-rate.php`) and the dummy gateway.
+- Ready for Hostinger via `DEPLOY.md`.

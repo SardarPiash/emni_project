@@ -41,6 +41,7 @@ backup*/
 wflogs/
 
 # ---------- Database dumps and logs ----------
+/logs/
 *.sql
 *.sql.gz
 *.log

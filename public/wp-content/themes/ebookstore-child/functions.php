@@ -496,3 +496,18 @@ add_filter(
 	10,
 	2
 );
+
+/* -------------------------------------------------------------------------
+ * Performance: CURCY's switcher styles and flag sprites are not used
+ * (the theme renders its own switcher). Its script stays — it handles
+ * page-cache compatibility.
+ * ---------------------------------------------------------------------- */
+
+add_action(
+	'wp_enqueue_scripts',
+	static function () {
+		wp_dequeue_style( 'woo-multi-currency' );
+		wp_dequeue_style( 'wmc-flags' );
+	},
+	100
+);

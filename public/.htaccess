@@ -13,6 +13,34 @@
 	</IfModule>
 </FilesMatch>
 
+# ---------------------------------------------------------
+# Hardening (Hostinger / LiteSpeed / Apache)
+# ---------------------------------------------------------
+# No directory listings.
+Options -Indexes
+
+# Block files that should never be requested directly.
+<FilesMatch "^(wp-config\.php|xmlrpc\.php|readme\.html|license\.txt|wp-config-sample\.php)$">
+	<IfModule mod_authz_core.c>
+		Require all denied
+	</IfModule>
+	<IfModule !mod_authz_core.c>
+		Order allow,deny
+		Deny from all
+	</IfModule>
+</FilesMatch>
+
+# Block log, SQL dump and backup files anywhere under the web root.
+<FilesMatch "\.(log|sql|sql\.gz|bak|swp)$">
+	<IfModule mod_authz_core.c>
+		Require all denied
+	</IfModule>
+	<IfModule !mod_authz_core.c>
+		Order allow,deny
+		Deny from all
+	</IfModule>
+</FilesMatch>
+
 # BEGIN WordPress
 # The directives (lines) between "BEGIN WordPress" and "END WordPress" are
 # dynamically generated, and should only be modified via WordPress filters.

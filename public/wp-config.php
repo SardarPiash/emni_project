@@ -41,7 +41,15 @@ define( 'WP_ENVIRONMENT_TYPE', 'production' === env( 'APP_ENV' ) ? 'production' 
 
 // ---------- Debugging ----------
 define( 'WP_DEBUG', (bool) env( 'WP_DEBUG', false ) );
-define( 'WP_DEBUG_LOG', (bool) env( 'WP_DEBUG_LOG', false ) );
+// The log file lives OUTSIDE the web root (../logs/debug.log), so it can never be downloaded.
+if ( env( 'WP_DEBUG_LOG', false ) ) {
+	if ( ! is_dir( $ebookstore_root . '/logs' ) ) {
+		@mkdir( $ebookstore_root . '/logs', 0750 ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+	}
+	define( 'WP_DEBUG_LOG', $ebookstore_root . '/logs/debug.log' );
+} else {
+	define( 'WP_DEBUG_LOG', false );
+}
 define( 'WP_DEBUG_DISPLAY', (bool) env( 'WP_DEBUG_DISPLAY', false ) );
 define( 'SCRIPT_DEBUG', false );
 
