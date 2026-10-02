@@ -399,3 +399,16 @@ remove_action( 'wp_head', 'rsd_link' );
 // Do not advertise exact WordPress / WooCommerce versions.
 remove_action( 'wp_head', 'wp_generator' );
 add_filter( 'the_generator', '__return_empty_string' );
+
+/**
+ * No product (cover) images in emails — keeps them short and light.
+ *
+ * @param array $args Order item table arguments.
+ * @return array
+ */
+function ebookstore_email_hide_product_images( $args ) {
+	$args['show_image'] = false;
+	return $args;
+}
+add_filter( 'woocommerce_email_order_items_args', 'ebookstore_email_hide_product_images', 20 );
+add_filter( 'woocommerce_email_fulfillment_items_args', 'ebookstore_email_hide_product_images', 20 );
