@@ -431,6 +431,8 @@ Login (`wp-login.php`), **My Account**, **Cart** and **Checkout** must never be 
 
 ### 14.5 If you are locked out
 
+> **First, before launch:** the admin account's email is a placeholder (`support@example.com`). Change it in **Users → Profile** to a real mailbox you can read, otherwise the unlock link (option 2) can never reach you.
+
 You will only ever be blocked from one network (IP), never as an account. Options, easiest first:
 
 1. **Use another network:** for example switch your phone from Wi-Fi to mobile data, and log in there.

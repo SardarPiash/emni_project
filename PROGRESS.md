@@ -466,8 +466,8 @@ Named S13–S15 here because Phases 13–14 above are the UI follow-ups.
 | Phase | Name | Status |
 |-------|------|--------|
 | S13 | Quick audit (no code changes) | ✅ Complete (2026-10-03) — approved |
-| S14 | Implementation | ✅ Complete (2026-10-03) — waiting for "next" |
-| S15 | Testing and report | ⏳ |
+| S14 | Implementation | ✅ Complete (2026-10-03) |
+| S15 | Testing and report | ✅ Complete (2026-10-03) — waiting for merge decision |
 
 ## Phase S13 — Audit (2026-10-03)
 
@@ -574,3 +574,34 @@ Nonces, capability checks, sanitizing/escaping, SQL and file handling are OK eve
 - Names: José, Zoë, O'Brien, O’Brien, Nguyễn, Anne-Marie, সাকিব and "Jr." pass; `<script>`, `' OR '1'='1` and 61 characters are rejected.
 - Regression: USD/GBP success → completed + PDF; USD/GBP fail → failed. Accessibility script OK on 8 pages.
 - The PHP log only had WordPress.org update-check warnings (SSL on this PC, not our code) → cleared.
+
+## Phase S15 — Testing (2026-10-03)
+
+Local tests with curl and headless Edge. Different visitor IPs were simulated with the test-only override (`SECURITY_TEST_IP_OVERRIDE`, `APP_ENV=local`), switched off afterwards. The test customer, test shop manager and a checkout-registered account were deleted afterwards. A temporary Application Password was deleted. The security log was cleared.
+
+| # | Test | Result |
+|---|------|--------|
+| 1 | 6 wrong admin passwords via wp-login.php → 6th 429; `/wp-admin/` + options page 429 with `Cache-Control: no-store`; admin-ajax/admin-post not blocked; real browser shows the blocked page (desktop + phone) | ✅ |
+| 2 | My Account form (admin and shop manager) → 6th 429. REST Basic Auth (once an Application Password exists) → 6th 429 JSON; correct app password refused from the blocked IP, 200 from another IP. XML-RPC → 403 | ✅ |
+| 3 | 6 unknown usernames → blocked | ✅ |
+| 4 | Correct admin password from the blocked IP → 429, no cookie; from another IP → logged in, wp-admin 200 | ✅ |
+| 5 | Security screen: unblock, unblock selected, manual block (works, 429), invalid IP and `<script>` rejected, unblock all, allowlist add, "Add my current IP" with "(you)" marker, allowlisted IP cannot be blocked and is never blocked, remove (own-IP warning). No nonce 403, customer 403, logged out 400. Log filter works, no passwords in the log, dashboard widget | ✅ |
+| 6 | Unlock email: link (40-char token) sent only for the admin email; customer/unknown email → same reply, no email; 4th request in an hour → 429; link works from another device but unblocks only the requesting IP; second use and forged token → 410; expired link → 410 | ✅ |
+| 7 | Lockout 1 minute → blocked, open again after 62 s; restored to 120. WP-CLI list/unblock/unblock-all/allow/disallow | ✅ |
+| 8 | 25 wrong passwords on a customer account → always the normal error, never a block, 0 log entries | ✅ |
+| 9 | From a blocked IP: browse, customer login, GBP switch + "charged in GBP", add to cart / fragments (wc-ajax), checkout success, PDF download, My Account downloads, registration at checkout, admin-ajax (CURCY) 200, Store API 200. `?wc-api=` gives WooCommerce's normal 400 for an unknown handler, the same as from an unblocked IP | ✅ |
+| 10 | Two reset requests: both show the normal message, only one email, the first link stays valid (key unchanged); the same through wp-login.php | ✅ |
+| 11 | José García, Zoë Nguyễn, O'Brien, O’Brien, Anne-Marie Dr., সাকিব হাসান accepted at checkout | ✅ |
+| 12 | `?author=1` / author URL → 301 home; `/wp/v2/users` (both URL forms) no route; oEmbed has no author; login name not in the page source; generic error for a wrong username, wrong password and wrong customer password | ✅ |
+| 13 | nosniff / SAMEORIGIN / Referrer-Policy on pages and wp-login; no generator or `ver=7.1.2`; blocked response `no-store` + `Retry-After` | ✅ |
+| 14 | Checkout: `<script>`, `<img onerror>`, `' OR '1'='1`, 300 characters, `Robert'); DROP TABLE` rejected (users intact); script/SQL usernames at login → generic error, stored as plain text in the log | ✅ |
+
+**Regression:**
+- USD/GBP success → completed + PDF + "ready to download" email (1 link each); USD/GBP fail → failed + "unsuccessful" email.
+- Accessibility script OK on 8 pages.
+- No sideways scrolling at 375/768/1440 on home, shop, product, cart, checkout, My Account and lost password.
+- PHP log empty. Dummy gateway: only the approved production guard was changed.
+
+**Findings for going live:**
+- The admin account email is `support@example.com` (placeholder). Unlock links can only arrive at a real address → change it in Users → Profile before launch (DEPLOY.md 14.5).
+- REST Basic Auth is only a login route once an Application Password exists (none exist now).
