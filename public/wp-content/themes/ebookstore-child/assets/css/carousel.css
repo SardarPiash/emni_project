@@ -1,0 +1,258 @@
+/* ==========================================================================
+   Hero carousel (home page only; loaded when Hero Slides exist)
+   ========================================================================== */
+
+.ebook-carousel {
+	position: relative;
+	margin: 0 calc(50% - 50vw);
+	background: var(--color-primary-dark);
+	color: var(--color-surface);
+}
+
+/* Space is reserved by the aspect ratio: no layout shift while images load. */
+.ebook-carousel__viewport {
+	position: relative;
+	display: grid;
+	aspect-ratio: 4 / 5;
+	max-height: 78vh;
+	overflow: hidden;
+	touch-action: pan-y;
+}
+
+@media (min-width: 768px) {
+	.ebook-carousel__viewport {
+		aspect-ratio: 16 / 6;
+		max-height: 560px;
+	}
+}
+
+.ebook-carousel__slide {
+	grid-area: 1 / 1;
+	position: relative;
+	opacity: 0;
+	visibility: hidden;
+	transition: opacity 0.6s var(--ease), visibility 0s linear 0.6s;
+}
+
+.ebook-carousel__slide.is-active {
+	opacity: 1;
+	visibility: visible;
+	transition: opacity 0.6s var(--ease), visibility 0s;
+}
+
+.ebook-carousel__media,
+.ebook-carousel__image {
+	position: absolute;
+	inset: 0;
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
+.ebook-carousel__image {
+	object-fit: cover;
+	max-width: none;
+	margin: 0;
+	border-radius: 0;
+	box-shadow: none;
+}
+
+/* Shade for readable text: strong navy on the text side. */
+.ebook-carousel__shade {
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(0deg, rgba(21, 40, 66, 0.92) 0%, rgba(21, 40, 66, 0.72) 45%, rgba(21, 40, 66, 0.15) 100%);
+}
+
+@media (min-width: 768px) {
+	.ebook-carousel__shade {
+		background: linear-gradient(90deg, rgba(21, 40, 66, 0.92) 0%, rgba(21, 40, 66, 0.8) 38%, rgba(21, 40, 66, 0.25) 70%, rgba(21, 40, 66, 0) 100%);
+	}
+}
+
+.ebook-carousel__content {
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	z-index: 2;
+	box-sizing: border-box;
+	width: 100%;
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: var(--space-6) var(--gutter) calc(var(--space-6) + 4.5rem);
+	text-align: center;
+}
+
+@media (min-width: 768px) {
+	.ebook-carousel__content {
+		top: 50%;
+		bottom: auto;
+		transform: translateY(-55%);
+		padding-bottom: var(--space-6);
+		text-align: left;
+	}
+
+	.ebook-carousel__content > * {
+		max-width: 34rem;
+	}
+}
+
+.ebook-carousel .ebook-carousel__title {
+	margin: 0 0 var(--space-3);
+	color: var(--color-surface);
+	font-size: clamp(1.75rem, 4.5vw, 3rem);
+	line-height: 1.15;
+}
+
+.ebook-carousel__text {
+	margin: 0 0 var(--space-5);
+	color: var(--color-bg);
+	font-size: clamp(1rem, 2vw, 1.1875rem);
+}
+
+/* Slide text eases in when the slide becomes active. */
+@media (prefers-reduced-motion: no-preference) {
+	.ebook-carousel--multi.is-ready .ebook-carousel__slide .ebook-carousel__content > * {
+		opacity: 0;
+		transform: translateY(12px);
+		transition: opacity 0.5s var(--ease) 0.15s, transform 0.5s var(--ease) 0.15s;
+	}
+
+	.ebook-carousel--multi.is-ready .ebook-carousel__slide.is-active .ebook-carousel__content > * {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+/* ---------- Controls (bottom right; hidden without JS) ---------- */
+.ebook-carousel__controls {
+	position: absolute;
+	right: 0;
+	bottom: calc(var(--space-6) + var(--space-3));
+	left: 0;
+	z-index: 3;
+	display: none;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-2);
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: 0 var(--gutter);
+	pointer-events: none;
+}
+
+.ebook-carousel.is-ready .ebook-carousel__controls {
+	display: flex;
+}
+
+.ebook-carousel__controls > * {
+	pointer-events: auto;
+}
+
+@media (min-width: 768px) {
+	.ebook-carousel__controls {
+		justify-content: flex-end;
+		bottom: calc(var(--space-6) + var(--space-5));
+	}
+}
+
+.ebook-carousel__arrow,
+.ebook-carousel__pause,
+.site-main .ebook-carousel__arrow,
+.site-main .ebook-carousel__pause {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--tap);
+	min-width: var(--tap);
+	height: var(--tap);
+	min-height: var(--tap);
+	padding: 0;
+	border: 1px solid rgba(250, 247, 242, 0.55);
+	border-radius: 999px;
+	background: rgba(21, 40, 66, 0.55);
+	color: var(--color-surface);
+	backdrop-filter: blur(4px);
+}
+
+.ebook-carousel__arrow:hover,
+.ebook-carousel__pause:hover {
+	background: var(--color-surface);
+	border-color: var(--color-surface);
+	color: var(--color-primary-dark);
+}
+
+.ebook-carousel__pause[hidden] {
+	display: none;
+}
+
+.ebook-carousel__icon-play,
+.ebook-carousel__pause.is-paused .ebook-carousel__icon-pause {
+	display: none;
+}
+
+.ebook-carousel__pause.is-paused .ebook-carousel__icon-play {
+	display: block;
+}
+
+.ebook-carousel__dots {
+	display: flex;
+	align-items: center;
+}
+
+/* Dot: visible pill inside a 44px-high tap target. */
+.ebook-carousel__dot,
+.site-main .ebook-carousel__dot {
+	position: relative;
+	width: 28px;
+	min-width: 28px;
+	height: var(--tap);
+	min-height: var(--tap);
+	padding: 0;
+	border: 0;
+	background: transparent;
+}
+
+.ebook-carousel__dot::before {
+	content: "";
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 10px;
+	height: 10px;
+	border: 2px solid var(--color-surface);
+	border-radius: 999px;
+	transform: translate(-50%, -50%);
+	transition: width 0.25s var(--ease), background-color 0.25s var(--ease);
+}
+
+.ebook-carousel__dot:hover,
+.site-main .ebook-carousel__dot:hover {
+	background: transparent;
+}
+
+.ebook-carousel__dot[aria-current="true"]::before {
+	width: 22px;
+	background: var(--color-gold);
+	border-color: var(--color-gold);
+}
+
+.ebook-carousel :focus-visible {
+	outline: 3px solid var(--color-gold);
+	outline-offset: 2px;
+	box-shadow: none;
+}
+
+/* The trust band overlaps the bottom edge of the carousel like the default hero. */
+.ebook-carousel + .ebook-home__trust {
+	margin-top: calc(-1 * var(--space-6));
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.ebook-carousel__slide,
+	.ebook-carousel__slide.is-active,
+	.ebook-carousel__dot::before {
+		transition: none;
+	}
+}

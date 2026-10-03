@@ -283,8 +283,8 @@ Working locally at `http://localhost:8080` (native Windows: PHP 8.3, MySQL 9.7, 
 | Phase | Name | Status |
 |-------|------|--------|
 | 8 | Impact analysis, research, design proposal | ✅ Complete (2026-10-03) — approved by user |
-| 9 | Design refresh and homepage layout | ✅ Complete (2026-10-03) — waiting for "next" |
-| 10 | Hero banner / carousel with admin | ⏳ |
+| 9 | Design refresh and homepage layout | ✅ Complete (2026-10-03) |
+| 10 | Hero banner / carousel with admin | ✅ Complete (2026-10-03) — waiting for "next" |
 | 11 | Demo catalog (50) + homepage sections | ⏳ |
 | 12 | Regression test, polish, deploy notes | ⏳ |
 
@@ -318,3 +318,21 @@ Working locally at `http://localhost:8080` (native Windows: PHP 8.3, MySQL 9.7, 
 ### Notes
 - Old log lines (`get_order_currency` deprecated) came from a WP-CLI order listing on 2026-10-02, not from the site; log cleared.
 - Rollback: `git checkout main` + import `backups/before-ui-redesign.sql`.
+
+## Phase 10 — Hero banner / carousel with admin upload (2026-10-03)
+
+### Done
+- **Admin (mu-plugin `ebook-store-core/hero-slides.php` + `assets/hero-slides-admin.js`):** private post type `ebookstore_slide` (no public URL, not searchable, no REST) → menu **Hero Slides**. Edit screen "Slide content": desktop image (required, 1600×600 recommended), optional mobile image (800×1000), heading, subheading, button text, button link (`/path`, `#anchor` or https URL), "Show this slide on the website"; order = "Order" box; Media Library pickers; plain-English help on list + edit screens; warning when a shown slide has no image. List columns: image, name, heading, order, On website (Shown/Hidden); sorted like the site. Saving: nonce + `edit_post` capability, images validated as attachments, text sanitized and length-limited.
+- **Settings** (Hero Slides → Settings): "Change slide every N seconds" (0–30, 0 = no autoplay); empty = `.env` **`HERO_AUTOPLAY_SECONDS`** (new key, default 6).
+- **Front end (child theme):** `inc/hero.php`, `template-parts/hero-carousel.php`, `assets/css/carousel.css`, `assets/js/hero-carousel.js` (vanilla). Full-width hero; 1 shown slide = static banner (no JS); ≥ 2 = carousel with arrows, dots, swipe, keyboard (←/→), autoplay with **visible pause button**, pause on hover/focus and hidden tab, no autoplay with reduced motion; WAI-ARIA carousel roles, hidden slides `inert` + `aria-hidden`, live region only for user actions. No slides → `template-parts/hero-default.php` (Phase 9 hero). Store name stays the page H1 (visually hidden over the carousel).
+- **Performance:** first slide eager + `fetchpriority="high"` + `<link rel=preload>` (separate mobile/desktop), other slides lazy; aspect-ratio reserves space (no layout shift); carousel CSS/JS load only on the home page and only when needed.
+- **Starter slides:** `wp ebookstore seed-slides` (safe to run twice) → 3 slides (#53, #56, #59) from `sample-content/hero/*.webp` (desktop 15–127 KB, mobile 11–123 KB). Photos: Unsplash License (verified, not Unsplash+), no people/brands/readable real titles → **`IMAGE_CREDITS.md`**. Several candidates were rejected (Unsplash+ licence, readable "Harry Potter", religious titles, branded planner).
+
+### Tests (all passed)
+- No slides → default hero; 3 slides → carousel; seeding twice → no duplicates.
+- Autoplay over simulated time: 2 s → slide 1, 7 s → 2, 13 s → 3, 19 s → 1; dots follow; pause button visible.
+- Admin as `ebook_manager`: list/help/columns, edit screen with Media pickers; hide slide via edit form → 2 slides; hide another → 1 slide = static (no controls, no JS); show again → 3; settings 4 s → `data-autoplay="4"`, empty → 6; all fields preserved through saves. Security: no nonce 403, logged out 400, slide public URL 404.
+- Regression: #60 USD success → completed + PDF + "ready to download" email (1 link); #61 GBP fail → failed, 0 downloads, "unsuccessful" email; dummy gateway 0 changes; no PHP errors.
+
+### Notes
+- Button links are stored as full URLs (`http://localhost:8080/shop/`) → fixed by the deploy search-replace (add to DEPLOY.md in Phase 12).

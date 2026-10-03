@@ -19,7 +19,7 @@ $ebookstore_shop = function_exists( 'wc_get_page_permalink' ) ? wc_get_page_perm
 <div id="primary" class="content-area ebook-home">
 	<main id="main" class="site-main">
 
-		<?php get_template_part( 'template-parts/hero-default' ); ?>
+		<?php ebookstore_child_hero(); ?>
 
 		<div class="ebook-home__trust ebook-reveal">
 			<?php ebookstore_child_trust_row( 'band' ); ?>
