@@ -301,7 +301,7 @@ Working locally at `http://localhost:8080` (native Windows: PHP 8.3, MySQL 9.7, 
 ### Done (child theme only — mu-plugin and dummy gateway unchanged)
 - Safety first: tag `before-ui-redesign`, branch `feature/ui-redesign`, DB backup `backups/before-ui-redesign.sql`.
 - Design tokens added to `main.css` `:root`: `--color-primary-soft`, `--color-accent-soft`, spacing scale `--space-1…8`, `--shadow-1/2`, `--ease`. Palette and fonts unchanged.
-- New theme structure: `inc/icons.php` (inline SVG set), `inc/assets.php` (enqueue `assets/css/components.css` 12 KB + `assets/js/site.js` 2.6 KB, deferred, no library), `inc/header.php`, `inc/trust.php`, `inc/badges.php`, `template-parts/hero-default.php`, `woocommerce/product-searchform.php` (template override).
+- New theme structure: `inc/icons.php` (inline SVG set), `inc/assets.php` (enqueue `assets/css/components.css` 9.6 KB + `assets/js/site.js` 2.4 KB, deferred, no library), `inc/header.php`, `inc/trust.php`, `inc/badges.php`, `template-parts/hero-default.php`, `woocommerce/product-searchform.php` (template override).
 - **Header:** product search box (rounded, icon button; full width on phones), cart = bag icon + count badge + subtotal (replaces Storefront's pluggable `storefront_cart_link`, so AJAX fragments still update it); menu + USD/GBP switcher unchanged.
 - **Hero:** two columns (text + stack of the 3 latest covers; covers hidden < 900px), "Browse eBooks" + "View all"; saved as `template-parts/hero-default.php` = Phase 10 fallback.
 - **Trust elements:** icon row (Instant PDF download · Secure checkout · Delivered to your email · Read on any device) — band under the hero, compact on product page (replaces the text list), under "Proceed to checkout" and under "Place order"; footer trust line.
