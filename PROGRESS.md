@@ -275,3 +275,155 @@ Working locally at `http://localhost:8080` (native Windows: PHP 8.3, MySQL 9.7, 
 - For Hostinger later: switch the SMTP lines to the Hostinger mailbox (DEPLOY.md §3c).
 - 2026-10-03 (user request): product images removed from all emails (`woocommerce_email_order_items_args` / `woocommerce_email_fulfillment_items_args` → `show_image=false` in the mu-plugin). Verified with order #45: 0 images, download link still present, sent via Gmail.
 - 2026-10-03 (user request): shop toolbar — removed the duplicate sorting dropdown + result count below the grid (Storefront adds both above and below); redesigned the top toolbar (white bar, result count left, "Sort by" + styled dropdown right, stacks on phones); smaller gap under page titles on shop/cart/checkout/account. Pagination below the grid kept (shows only with > 12 eBooks).
+
+---
+
+# UI Redesign (ui_redesign_prompt.md — Phases 8–12)
+
+| Phase | Name | Status |
+|-------|------|--------|
+| 8 | Impact analysis, research, design proposal | ✅ Complete (2026-10-03) — approved by user |
+| 9 | Design refresh and homepage layout | ✅ Complete (2026-10-03) |
+| 10 | Hero banner / carousel with admin | ✅ Complete (2026-10-03) |
+| 11 | Demo catalog (50) + homepage sections | ✅ Complete (2026-10-03) |
+| 12 | Regression test, polish, deploy notes | ✅ Complete (2026-10-03) |
+| 13 | User feedback: side banners, carousel controls, shop page, category control | ✅ Complete (2026-10-03) — waiting for review / merge decision |
+
+## Phase 8 — summary (2026-10-03)
+- Verdict: safe if the safeguards are kept. `ebook-dummy-gateway` untouched; checkout/currency/env/email/download logic in the mu-plugin unchanged; redesign = child theme; new admin features = new files in `mu-plugins/ebook-store-core/`.
+- **User decisions (all recommendations approved):** custom "Hero Slides" (not a slider plugin); keep palette + fonts, add `--color-primary-soft #E8EEF5` (10.1:1 with primary) and `--color-accent-soft #FBE9E3` (12.5:1 with primary-dark) + spacing scale + 2 shadow levels; the existing 6 sample eBooks become demo (`_ebookstore_demo`); homepage section settings on an admin page; search box back in the header; no carousel library (vanilla JS; Swiper heavy, Splide unmaintained since 2022; Embla only as fallback); visible pause button on the carousel (WCAG 2.2.2); Bestsellers on the live site must use real sales only.
+- Design research: Stripe Press, Leanpub, Penguin UK, Payhip, bookstore UX case study (inspiration only).
+- Images: Unsplash + Pexels licences verified 2026-10-03 (free commercial use, attribution optional; no unaltered resale, no implied endorsement, avoid identifiable people/brands) → `IMAGE_CREDITS.md`. Covers: generated originals only.
+- **Live site finding:** ebookstore.tech runs a different build (fse-book-store theme + Elementor, 6 products, no currency switcher) — none of this project is live. Ask again before any deployment (Phase 12).
+- Safety (done at Phase 9 start): tag `before-ui-redesign` (010c5af), branch `feature/ui-redesign`, DB backup `backups/before-ui-redesign.sql` (via `bin/export-db.ps1`; `wp db export` fails on this PC). Rollback: `git checkout main` + import that file.
+
+## Phase 9 — Design refresh and homepage layout (2026-10-03)
+
+### Done (child theme only — mu-plugin and dummy gateway unchanged)
+- Safety first: tag `before-ui-redesign`, branch `feature/ui-redesign`, DB backup `backups/before-ui-redesign.sql`.
+- Design tokens added to `main.css` `:root`: `--color-primary-soft`, `--color-accent-soft`, spacing scale `--space-1…8`, `--shadow-1/2`, `--ease`. Palette and fonts unchanged.
+- New theme structure: `inc/icons.php` (inline SVG set), `inc/assets.php` (enqueue `assets/css/components.css` 9.6 KB + `assets/js/site.js` 2.4 KB, deferred, no library), `inc/header.php`, `inc/trust.php`, `inc/badges.php`, `template-parts/hero-default.php`, `woocommerce/product-searchform.php` (template override).
+- **Header:** product search box (rounded, icon button; full width on phones), cart = bag icon + count badge + subtotal (replaces Storefront's pluggable `storefront_cart_link`, so AJAX fragments still update it); menu + USD/GBP switcher unchanged.
+- **Hero:** two columns (text + stack of the 3 latest covers; covers hidden < 900px), "Browse eBooks" + "View all"; saved as `template-parts/hero-default.php` = Phase 10 fallback.
+- **Trust elements:** icon row (Instant PDF download · Secure checkout · Delivered to your email · Read on any device) — band under the hero, compact on product page (replaces the text list), under "Proceed to checkout" and under "Place order"; footer trust line.
+- **Product cards:** badge over the cover (Bestseller = top 3 by real WooCommerce sales count with ≥ 1 sale, cached 1 h, refreshed on completed/processing orders; New = < 30 days), stronger hover lift/shadow, 2-line title / 3-line excerpt clamp, button press feedback. Product page: badge above the title, sticky cover on desktop.
+- **Animations:** reveal-on-scroll (IntersectionObserver; content visible without JS; 2.5 s safety net), card/button/hero-cover hovers, cart badge pulse after "added to cart"; all off with `prefers-reduced-motion`; nothing animated on cart/checkout.
+- Screenshots: home 1440 + 375, product, cart, checkout 1440 (reduced-motion run to see final state).
+
+### Regression (all passed)
+- #49 GBP success → completed, PDF download 200 `application/pdf` "Mindful Mornings.pdf" identical to source, limit 5 / expiry 30 days; email "ready to download" with 1 link sent via Gmail + admin new order.
+- #50 USD failure → failed, 0 download permissions; "unsuccessful" email (0 links) + admin failed order.
+- Currency switch + "You will be charged in GBP: £6.05" on cart and checkout; checkout fields = first name, last name, email, country.
+- `ebook-dummy-gateway`: 0 files changed. No PHP errors.
+
+### Notes
+- Old log lines (`get_order_currency` deprecated) came from a WP-CLI order listing on 2026-10-02, not from the site; log cleared.
+- Rollback: `git checkout main` + import `backups/before-ui-redesign.sql`.
+
+## Phase 10 — Hero banner / carousel with admin upload (2026-10-03)
+
+### Done
+- **Admin (mu-plugin `ebook-store-core/hero-slides.php` + `assets/hero-slides-admin.js`):** private post type `ebookstore_slide` (no public URL, not searchable, no REST) → menu **Hero Slides**. Edit screen "Slide content": desktop image (required, 1600×600 recommended), optional mobile image (800×1000), heading, subheading, button text, button link (`/path`, `#anchor` or https URL), "Show this slide on the website"; order = "Order" box; Media Library pickers; plain-English help on list + edit screens; warning when a shown slide has no image. List columns: image, name, heading, order, On website (Shown/Hidden); sorted like the site. Saving: nonce + `edit_post` capability, images validated as attachments, text sanitized and length-limited.
+- **Settings** (Hero Slides → Settings): "Change slide every N seconds" (0–30, 0 = no autoplay); empty = `.env` **`HERO_AUTOPLAY_SECONDS`** (new key, default 6).
+- **Front end (child theme):** `inc/hero.php`, `template-parts/hero-carousel.php`, `assets/css/carousel.css`, `assets/js/hero-carousel.js` (vanilla). Full-width hero; 1 shown slide = static banner (no JS); ≥ 2 = carousel with arrows, dots, swipe, keyboard (←/→), autoplay with **visible pause button**, pause on hover/focus and hidden tab, no autoplay with reduced motion; WAI-ARIA carousel roles, hidden slides `inert` + `aria-hidden`, live region only for user actions. No slides → `template-parts/hero-default.php` (Phase 9 hero). Store name stays the page H1 (visually hidden over the carousel).
+- **Performance:** first slide eager + `fetchpriority="high"` + `<link rel=preload>` (separate mobile/desktop), other slides lazy; aspect-ratio reserves space (no layout shift); carousel CSS/JS load only on the home page and only when needed.
+- **Starter slides:** `wp ebookstore seed-slides` (safe to run twice) → 3 slides (#53, #56, #59) from `sample-content/hero/*.webp` (desktop 15–127 KB, mobile 11–123 KB). Photos: Unsplash License (verified, not Unsplash+), no people/brands/readable real titles → **`IMAGE_CREDITS.md`**. Several candidates were rejected (Unsplash+ licence, readable "Harry Potter", religious titles, branded planner).
+
+### Tests (all passed)
+- No slides → default hero; 3 slides → carousel; seeding twice → no duplicates.
+- Autoplay over simulated time: 2 s → slide 1, 7 s → 2, 13 s → 3, 19 s → 1; dots follow; pause button visible.
+- Admin as `ebook_manager`: list/help/columns, edit screen with Media pickers; hide slide via edit form → 2 slides; hide another → 1 slide = static (no controls, no JS); show again → 3; settings 4 s → `data-autoplay="4"`, empty → 6; all fields preserved through saves. Security: no nonce 403, logged out 400, slide public URL 404.
+- Regression: #60 USD success → completed + PDF + "ready to download" email (1 link); #61 GBP fail → failed, 0 downloads, "unsuccessful" email; dummy gateway 0 changes; no PHP errors.
+
+### Notes
+- Button links are stored as full URLs (`http://localhost:8080/shop/`) → fixed by the deploy search-replace (add to DEPLOY.md in Phase 12).
+
+## Phase 11 — Demo catalog (50 products) and homepage sections (2026-10-03)
+
+### Done
+- **`wp ebookstore seed-demo`** (mu-plugin `ebook-store-core/demo-data.php`, loaded only in WP-CLI): 44 new fictional eBooks from `sample-content/demo-books.json` + the 6 original samples tagged as demo = **50 demo eBooks** in 8 categories (Business 6, Productivity 7, Technology 7, Fiction 7, Wellness 6, Finance 6, Cooking 6, Travel 5). Each: Virtual, Downloadable, Sold individually, $5.99–$21.99, short + long English description, generated original 2:3 WebP cover (3 layouts × category colours, avg 14 KB), own demo PDF in `woocommerce_uploads/demo/` (unguessable name), 9 Featured, publish dates spread over 240 days (11 "New"), demo `total_sales` 3–480. Everything tagged `_ebookstore_demo` (products, covers, categories); PDF paths stored in `_ebookstore_demo_files`. Safe to run twice; refuses on `APP_ENV=production` without `--force`. "The Art of Short Stories" moved Writing → Fiction; empty "Writing" category removed. Three titles renamed to avoid similarity with real books.
+- **`wp ebookstore remove-demo [--yes] [--include-ordered]`**: deletes only demo-tagged eBooks, their demo covers, PDFs (only inside `woocommerce_uploads`) and empty demo categories; never touches orders; by default keeps demo eBooks that appear in **any** order.
+  - **Bug found and fixed during testing:** the first version checked `wc_order_product_lookup`, which ignores failed/pending orders, so "Everyday Home Cooking" (only in a failed order) was deleted. Now checks order line items of all statuses. The book was recreated (`sample-content/create-products.php`, new ID #239) and re-tagged; orders and their line items were never affected (14 orders / 14 items before and after).
+- **Home page sections** (child theme `inc/sections.php`, `template-parts/sections/{products,categories,promo}.php`): Bestsellers (`best_selling`), Editor's Picks (featured), Browse by Category (8 cards with newest cover + count), New Arrivals, promotional strip; each with "View all" (shop `?orderby=popularity`, `?ebook_list=featured`, `?orderby=date`, shop). Grids on desktop; product rows swipe horizontally on phones (CSS scroll-snap, no JS); category cards 2 per row on phones. First visible section gets `id="ebooks"` (hero button target). All sections off → fallback "Our eBooks" grid.
+- **Admin: Home Page → Sections** (mu-plugin `ebook-store-core/homepage-sections.php`): show/hide, title, number of items (4/8/12) per section, promo title/text/button. Menu renamed **Home Page** (Hero Slides, Add New Slide, Slideshow Settings, Sections).
+- **Shop for 50+ eBooks:** category filter dropdown in the toolbar (navigates on change; `<noscript>` Go button), "Showing 1–12 of 50 results", 5 pages, sorting; Editor's Picks list (`?ebook_list=featured`, title from the section setting).
+- Badges moved to the top-right of the cover (no overlap with cover text); section focus ring removed; promo strip sits on the footer.
+
+### Tests (all passed)
+- Seed twice → 44 skipped. 50 published / 50 demo / 50 covers / 50 PDFs on disk.
+- Home: 5 sections in order, correct products per section, category counts; shop page 1 = 12 cards, page 5 = 2; Travel = 5; Editor's Picks = 9; filter pre-selects the current category; no-JS `?product_cat=finance` = 6.
+- Sections admin as `ebook_manager`: hide/rename/count/promo text (HTML stripped), all off → fallback grid, restore defaults; no nonce 403, logged out 400.
+- remove-demo (with DB backup `backups/before-remove-demo-test.sql`) → see bug above; re-seed restored everything.
+- Regression: #240 GBP success with a new demo eBook (Slow Travel Europe) → completed + PDF + email (1 link); #241 USD fail → failed, 0 downloads, "unsuccessful" email; checkout fields unchanged; dummy gateway 0 changes; no PHP errors.
+
+### ⚠️ Before going live
+Demo sales counts (and the "Bestseller" badges/section they drive) are **fake**. Run `wp ebookstore remove-demo` (or get the client's written approval) before deploying, and never import this local database into the live site with demo data in it.
+
+## Phase 12 — Regression, performance, accessibility, deploy notes (2026-10-03)
+
+### Full regression (all passed)
+| Order | Currency | Payment | Result |
+|-------|----------|---------|--------|
+| #242 | USD | success | completed, PDF download 200, "ready to download" email (1 link) + admin email |
+| #243 | USD | fail | failed, 0 download permissions, "unsuccessful" email |
+| #244 | GBP (£5.30) | success | completed, "You will be charged in GBP" notice, download + email |
+| #245 | GBP | fail | failed, 0 downloads |
+- Checkout fields still first name, last name, email, country; `.env` settings and Gmail SMTP working; download limit 5 / expiry 30 days unchanged.
+- `ebook-dummy-gateway`: 0 lines changed against `main`. PHP error log empty. Browser console: no errors (only jQuery Migrate's info line, from WordPress).
+
+### Performance
+- Our own front-end files total about 72 KB uncompressed (CSS + JS, no libraries). The carousel CSS/JS load only on the home page.
+- **Fixed:** the WooCommerce product covers on the home page all loaded immediately. The new `inc/performance.php` makes covers lazy except the first row on shop/category/search pages. Result: home 1 eager image (hero slide) / 22 lazy; listings 4 eager; product page 1 eager (main cover), related eBooks lazy.
+
+### Accessibility
+- Static check script (lang, alt text, accessible names for links/buttons, form labels, duplicate ids, one h1, heading order) on home, shop, product, category, cart, checkout, my account and terms: all OK.
+- **Fixed:** checkout heading jump h1 → h3. A visually hidden h2 "Checkout steps" was added (`functions.php`).
+- Carousel: keyboard, visible pause button, reduced-motion support and `inert` hidden slides were already covered in Phase 10.
+
+### Responsive check (375 / 768 / 1024 / 1440)
+- **Fixed:** at 1024px product grids showed 3 cards with an orphan. They now show 4 per row from 1024px (`components.css`).
+- **Fixed:** at 768px the hero banner was too short for its text. It is taller on tablets now (`carousel.css`).
+- **Fixed:** at 768–1023px the two checkout columns were too narrow (the trust row wrapped word by word). They are stacked on tablets now (`main.css`).
+- Shop, product page and checkout at 375px, and home at 768/1024/1440, are correct.
+
+### Docs
+- `DEPLOY.md`: new section 13. It covers what to deploy, the Home Page admin for the owner, removing the demo data before launch (fake sales!), slide links fixed by the search-replace, `HERO_AUTOPLAY_SECONDS`, the ebookstore.tech note and rollback. Section 8.6 checklist and section 11 table updated.
+- `PLUGINS.md`: our own code list updated. No new third-party plugins or libraries.
+
+### Open decisions for the user
+- Merge `feature/ui-redesign` into `main`? (Not merged, not pushed.)
+- Replace the current ebookstore.tech build with this project? (Not touched.)
+
+## Phase 13 — Home banners, carousel controls, shop page, category control (2026-10-03, user feedback)
+
+### Requested by the user
+The home banner area should look more attractive, with 2–3 separate promotion banners. The carousel buttons should look better, and the pause/play button is not wanted. On All eBooks, pagination should be at the bottom and the page layout improved. The admin should be able to manage Browse by Category. Chosen options: "slider + side banners" and "admin picks categories".
+
+### Done
+- **Side promo banners** (new mu-plugin file `ebook-store-core/promo-banners.php`, admin **Home Page → Side Banners**). There are 2 banners. Each has: show/hide, small label, title, text, button text, link, colour (navy/coral/gold/cream, all ≥ 4.5:1 text contrast), and either 2 book covers from a list (Editor's Picks / Newest / Bestsellers / none) or an uploaded image. Links are stored relative (`/shop/…`), so no search-replace is needed after a domain move. Saving needs a nonce and `edit_pages`; text is sanitized and length-limited; `javascript:` links are dropped; unknown colours fall back to the default.
+- **Home hero layout** (`inc/hero.php`, `template-parts/promo-banners.php`, `components.css`):
+  - **Desktop:** slider (2/3) + 2 stacked banners (1/3), same height.
+  - **Tablet:** slider, then 2 banners side by side.
+  - **Phone:** stacked.
+  - No slides → default hero with the banners in a row below it.
+- **Carousel controls** (`hero-carousel.php/.js`, `carousel.css`): the slider is now contained with rounded corners (no longer full-bleed). It has round white arrows on the left/right edges (shown on hover/focus on desktop, hidden on touch screens, where you swipe) and small bar dots centred at the bottom. **Pause button removed** at the user's request. Autoplay still pauses on hover/keyboard focus/hidden tab, never runs with reduced motion, and can be set to 0 in Slideshow Settings. Note: WCAG 2.2.2 expects a pause control for auto-moving content; this is a deliberate client decision.
+- **All eBooks / category / search pages** (new `inc/shop.php`):
+  - **Layout:** desktop has a left sidebar card (Categories with counts, current one highlighted; Collections: Bestsellers, Editor's Picks, New Arrivals) and 3 eBooks per row. On phones/tablets the categories become a swipeable chip row, with the current chip scrolled into view.
+  - **Toolbar:** result count + Sort by.
+  - **Pagination:** removed above the grid (Storefront hook); below the grid it is centred, with square buttons and "← Previous / Next →" (arrows only on small phones).
+  - The old category dropdown (and its JS) was removed, since the sidebar replaces it.
+- **Browse by Category control** (Sections page): tick categories and give them positions 1, 2, 3 …; none ticked = automatic (the biggest categories). The card picture is the category's own image (Products → Categories → Thumbnail), else the newest cover. Empty categories are hidden.
+- Slide image advice updated to 1600 × 900 (slider is narrower now).
+
+### Tests (all passed)
+- Admin as `ebook_manager`:
+  - The Side Banners page has 2 boxes, image pickers and the menu order Hero Slides, Slideshow Settings, Side Banners, Sections.
+  - Saves work: gold/bestsellers/relative link → correct class + full URL; HTML stripped from the title; hidden banner not shown.
+  - Bad colour → default; `javascript:` link → banner without link; image → image variant; invalid image ID ignored.
+  - Without a nonce the save returns 403; logged out it returns 400.
+- Sections: Travel(1)/Fiction(2)/Cooking(3) → home shows exactly that order; all unticked → automatic; a category thumbnail is used when set. Test data reset afterwards.
+- Screenshots at 1440/1024/768/375 (home, shop, shop page 5, category on phone).
+- Regression:
+  - #246 USD success and #247 GBP success: completed + PDF download + "ready to download" email (1 link each).
+  - #248 USD fail and #249 GBP fail: failed, 0 downloads, "unsuccessful" emails.
+  - Charge notices are correct. The accessibility script passes on all 8 pages. PHP log empty. `ebook-dummy-gateway`: 0 lines changed.

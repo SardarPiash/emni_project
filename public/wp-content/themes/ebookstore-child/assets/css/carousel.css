@@ -1,0 +1,270 @@
+/* ==========================================================================
+   Hero carousel (home page only; loaded when Hero Slides exist)
+   Layout: slideshow + side banners (.ebook-hero-grid, components.css).
+   ========================================================================== */
+
+.ebook-carousel {
+	position: relative;
+	overflow: hidden;
+	border-radius: 14px;
+	background: var(--color-primary-dark);
+	color: var(--color-surface);
+	box-shadow: var(--shadow-1);
+}
+
+/* Space is reserved by the aspect ratio / height: no layout shift while images load. */
+.ebook-carousel__viewport {
+	position: relative;
+	display: grid;
+	height: 100%;
+	aspect-ratio: 4 / 5;
+	max-height: 520px;
+	overflow: hidden;
+	touch-action: pan-y;
+}
+
+@media (min-width: 768px) {
+	.ebook-carousel__viewport {
+		aspect-ratio: 16 / 8;
+		max-height: none;
+	}
+}
+
+/* Desktop: fills the grid row (as tall as the side banners, at least 440px). */
+@media (min-width: 1024px) {
+	.ebook-carousel {
+		height: 100%;
+	}
+
+	.ebook-carousel__viewport {
+		aspect-ratio: auto;
+		min-height: 440px;
+	}
+}
+
+.ebook-carousel__slide {
+	grid-area: 1 / 1;
+	position: relative;
+	opacity: 0;
+	visibility: hidden;
+	transition: opacity 0.6s var(--ease), visibility 0s linear 0.6s;
+}
+
+.ebook-carousel__slide.is-active {
+	opacity: 1;
+	visibility: visible;
+	transition: opacity 0.6s var(--ease), visibility 0s;
+}
+
+.ebook-carousel__media,
+.ebook-carousel__image {
+	position: absolute;
+	inset: 0;
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
+.ebook-carousel__image {
+	object-fit: cover;
+	max-width: none;
+	margin: 0;
+	border-radius: 0;
+	box-shadow: none;
+}
+
+/* Shade for readable text: strong navy on the text side. */
+.ebook-carousel__shade {
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(0deg, rgba(21, 40, 66, 0.94) 0%, rgba(21, 40, 66, 0.7) 45%, rgba(21, 40, 66, 0.1) 100%);
+}
+
+@media (min-width: 768px) {
+	.ebook-carousel__shade {
+		background: linear-gradient(90deg, rgba(21, 40, 66, 0.92) 0%, rgba(21, 40, 66, 0.78) 40%, rgba(21, 40, 66, 0.2) 75%, rgba(21, 40, 66, 0) 100%);
+	}
+}
+
+.ebook-carousel__content {
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	z-index: 2;
+	box-sizing: border-box;
+	padding: var(--space-5) var(--space-5) calc(var(--space-5) + 1.75rem);
+	text-align: left;
+}
+
+@media (min-width: 768px) {
+	.ebook-carousel__content {
+		top: 50%;
+		right: auto;
+		bottom: auto;
+		width: 100%;
+		transform: translateY(-50%);
+		padding: var(--space-6) var(--space-8) var(--space-6) var(--space-7);
+	}
+
+	.ebook-carousel__content > * {
+		max-width: 30rem;
+	}
+}
+
+.ebook-carousel .ebook-carousel__title {
+	margin: 0 0 var(--space-3);
+	color: var(--color-surface);
+	font-size: clamp(1.625rem, 3.4vw, 2.5rem);
+	line-height: 1.15;
+}
+
+.ebook-carousel__text {
+	margin: 0 0 var(--space-5);
+	color: var(--color-bg);
+	font-size: clamp(1rem, 1.6vw, 1.125rem);
+}
+
+/* Slide text eases in when the slide becomes active. */
+@media (prefers-reduced-motion: no-preference) {
+	.ebook-carousel--multi.is-ready .ebook-carousel__slide .ebook-carousel__content > * {
+		opacity: 0;
+		transform: translateY(12px);
+		transition: opacity 0.5s var(--ease) 0.15s, transform 0.5s var(--ease) 0.15s;
+	}
+
+	.ebook-carousel--multi.is-ready .ebook-carousel__slide.is-active .ebook-carousel__content > * {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+/* ---------- Controls (hidden without JS) ---------- */
+.ebook-carousel__arrow,
+.ebook-carousel__dots {
+	display: none;
+}
+
+/* Arrows: round white buttons on the left/right edge, vertically centred. */
+.ebook-carousel.is-ready .ebook-carousel__arrow,
+.site-main .ebook-carousel.is-ready .ebook-carousel__arrow {
+	position: absolute;
+	top: 50%;
+	z-index: 3;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--tap);
+	min-width: var(--tap);
+	height: var(--tap);
+	min-height: var(--tap);
+	padding: 0;
+	border: 0;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.92);
+	color: var(--color-primary-dark);
+	box-shadow: 0 4px 14px rgba(21, 40, 66, 0.25);
+	transform: translateY(-50%);
+	transition: opacity 0.2s var(--ease), background-color 0.2s var(--ease), transform 0.2s var(--ease);
+}
+
+.ebook-carousel__arrow--prev {
+	left: var(--space-3);
+}
+
+.ebook-carousel__arrow--next {
+	right: var(--space-3);
+}
+
+.ebook-carousel.is-ready .ebook-carousel__arrow:hover {
+	background: var(--color-surface);
+	color: var(--color-primary);
+	transform: translateY(-50%) scale(1.06);
+}
+
+/* Mouse users: arrows appear when the pointer is over the slideshow. */
+@media (hover: hover) and (min-width: 768px) {
+	.ebook-carousel.is-ready .ebook-carousel__arrow {
+		opacity: 0;
+	}
+
+	.ebook-carousel.is-ready:hover .ebook-carousel__arrow,
+	.ebook-carousel.is-ready:focus-within .ebook-carousel__arrow {
+		opacity: 1;
+	}
+}
+
+/* Phones / touch screens: swipe + dots instead of arrows. */
+@media (hover: none), (max-width: 767px) {
+	.ebook-carousel.is-ready .ebook-carousel__arrow,
+	.site-main .ebook-carousel.is-ready .ebook-carousel__arrow {
+		display: none;
+	}
+}
+
+/* Dots: small bars centred at the bottom. */
+.ebook-carousel.is-ready .ebook-carousel__dots {
+	position: absolute;
+	right: 0;
+	bottom: var(--space-2);
+	left: 0;
+	z-index: 3;
+	display: flex;
+	justify-content: center;
+	pointer-events: none;
+}
+
+.ebook-carousel__dot,
+.site-main .ebook-carousel__dot {
+	position: relative;
+	width: 26px;
+	min-width: 26px;
+	height: 32px;
+	min-height: 32px;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	pointer-events: auto;
+}
+
+.ebook-carousel__dot::before {
+	content: "";
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 8px;
+	height: 8px;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.55);
+	transform: translate(-50%, -50%);
+	transition: width 0.25s var(--ease), background-color 0.25s var(--ease);
+}
+
+.ebook-carousel__dot:hover,
+.site-main .ebook-carousel__dot:hover {
+	background: transparent;
+}
+
+.ebook-carousel__dot:hover::before {
+	background: rgba(255, 255, 255, 0.85);
+}
+
+.ebook-carousel__dot[aria-current="true"]::before {
+	width: 24px;
+	background: var(--color-surface);
+}
+
+.ebook-carousel :focus-visible {
+	outline: 3px solid var(--color-gold);
+	outline-offset: 2px;
+	box-shadow: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.ebook-carousel__slide,
+	.ebook-carousel__slide.is-active,
+	.ebook-carousel__dot::before,
+	.ebook-carousel__arrow {
+		transition: none;
+	}
+}

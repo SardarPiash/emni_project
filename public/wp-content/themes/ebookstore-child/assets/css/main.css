@@ -38,6 +38,26 @@
 	--color-success: #2F855A;
 	--color-error: #C53030;
 
+	/* Phase 9 refinements (contrast-checked): soft tints for sections and badges. */
+	--color-primary-soft: #E8EEF5; /* primary text on it 10.1:1 */
+	--color-accent-soft: #FBE9E3;  /* primary-dark text on it 12.5:1 */
+
+	/* Spacing scale */
+	--space-1: 0.25rem;  /* 4px */
+	--space-2: 0.5rem;   /* 8px */
+	--space-3: 0.75rem;  /* 12px */
+	--space-4: 1rem;     /* 16px */
+	--space-5: 1.5rem;   /* 24px */
+	--space-6: 2rem;     /* 32px */
+	--space-7: 3rem;     /* 48px */
+	--space-8: 4rem;     /* 64px */
+
+	/* Shadow levels */
+	--shadow-1: 0 1px 2px rgba(21, 40, 66, 0.06), 0 2px 8px rgba(21, 40, 66, 0.06);
+	--shadow-2: 0 4px 10px rgba(21, 40, 66, 0.08), 0 16px 36px rgba(21, 40, 66, 0.12);
+
+	--ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+
 	--font-heading: "Merriweather", Georgia, "Times New Roman", serif;
 	--font-body: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 
@@ -1886,14 +1906,6 @@ p.woocommerce-thankyou-order-received {
 	border-color: var(--color-primary);
 }
 
-/* Pagination (only when there are more than 12 eBooks) sits on its own line. */
-.storefront-sorting .woocommerce-pagination {
-	flex-basis: 100%;
-	float: none;
-	margin: 0;
-	text-align: center;
-}
-
 @media (max-width: 599px) {
 	.storefront-sorting .woocommerce-result-count {
 		flex-basis: 100%;
@@ -1909,8 +1921,17 @@ p.woocommerce-thankyou-order-received {
 	}
 }
 
-/* Pagination below the grid (no toolbar box there). */
-.site-main > .woocommerce-pagination {
-	margin: 0 0 2rem;
-	text-align: center;
+/* Tablets (768–1023px): Storefront's two checkout columns are too narrow, so stack them. */
+@media (min-width: 768px) and (max-width: 1023px) {
+	.woocommerce-checkout .col2-set,
+	.woocommerce-checkout #order_review_heading,
+	.woocommerce-checkout #order_review {
+		float: none;
+		width: 100%;
+		margin-right: 0;
+	}
+
+	.woocommerce-checkout #customer_details {
+		margin-bottom: 2rem;
+	}
 }

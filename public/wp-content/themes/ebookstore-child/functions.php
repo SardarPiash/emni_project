@@ -57,6 +57,20 @@ function ebookstore_child_asset_version( $relative ) {
 }
 
 /* -------------------------------------------------------------------------
+ * Components (Phase 9 redesign)
+ * ---------------------------------------------------------------------- */
+
+require_once __DIR__ . '/inc/icons.php';
+require_once __DIR__ . '/inc/assets.php';
+require_once __DIR__ . '/inc/header.php';
+require_once __DIR__ . '/inc/trust.php';
+require_once __DIR__ . '/inc/badges.php';
+require_once __DIR__ . '/inc/hero.php';
+require_once __DIR__ . '/inc/sections.php';
+require_once __DIR__ . '/inc/shop.php';
+require_once __DIR__ . '/inc/performance.php';
+
+/* -------------------------------------------------------------------------
  * Assets: self-hosted fonts, main stylesheet, no Google Fonts / Customizer CSS
  * ---------------------------------------------------------------------- */
 
@@ -102,7 +116,7 @@ add_filter( 'storefront_google_font_families', '__return_empty_array' );
 add_action(
 	'init',
 	static function () {
-		// Header: no product search (small catalog).
+		// Header: Storefront's search widget is replaced by our own (inc/header.php).
 		remove_action( 'storefront_header', 'storefront_product_search', 40 );
 
 		// Footer: replace widgets + Storefront credit with our footer.
@@ -338,6 +352,7 @@ function ebookstore_child_footer() {
 	</div>
 	<div class="ebook-footer__bottom">
 		<p>&copy; <?php echo esc_html( gmdate( 'Y' ) . ' ' . $name ); ?>. <?php esc_html_e( 'All rights reserved.', 'ebookstore-child' ); ?></p>
+		<p class="ebook-footer__trust"><?php esc_html_e( 'Instant PDF delivery · Secure checkout · Prices in USD or GBP', 'ebookstore-child' ); ?></p>
 	</div>
 	<?php
 }
@@ -529,3 +544,15 @@ function ebookstore_child_sort_label() {
 	}
 	echo '<span class="ebook-sort-label" aria-hidden="true">' . esc_html__( 'Sort by', 'ebookstore-child' ) . '</span>';
 }
+
+/**
+ * Accessibility: WooCommerce's checkout jumps from the page title (h1) to
+ * "Your details" (h3). A visually hidden h2 keeps the heading levels in order
+ * without overriding WooCommerce templates.
+ */
+add_action(
+	'woocommerce_checkout_before_customer_details',
+	static function () {
+		echo '<h2 class="screen-reader-text">' . esc_html__( 'Checkout steps', 'ebookstore-child' ) . '</h2>';
+	}
+);

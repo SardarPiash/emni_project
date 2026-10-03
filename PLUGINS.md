@@ -35,8 +35,8 @@ from `C:\projects\ebook-store` in PowerShell (`wp-cli.yml` points WP-CLI to `pub
 
 | Path | Type |
 |------|------|
-| `public/wp-content/mu-plugins/ebook-store-core.php` + `ebook-store-core/exchange-rate.php` | must-use plugin |
-| `public/wp-content/themes/ebookstore-child/` | child theme (active) |
+| `public/wp-content/mu-plugins/ebook-store-core.php` + `ebook-store-core/` (`exchange-rate.php`, `hero-slides.php`, `homepage-sections.php`, `promo-banners.php`, `demo-data.php`, `assets/hero-slides-admin.js`) | must-use plugin |
+| `public/wp-content/themes/ebookstore-child/` | child theme (active) — the UI redesign (hero carousel, sections, badges, icons) is plain PHP/CSS/vanilla JS: **no front-end libraries** (no slider, no animation, no icon font) |
 | `public/wp-content/plugins/ebook-dummy-gateway/` | test-only gateway — active while `DUMMY_GATEWAY_ENABLED=true`; see its README.md to remove |
 
 ## Sample content (in git, local testing only)
@@ -45,3 +45,11 @@ from `C:\projects\ebook-store` in PowerShell (`wp-cli.yml` points WP-CLI to `pub
 php sample-content/generate.php              # PDFs + 2:3 covers from books.json
 wp eval-file sample-content/create-products.php   # creates the 6 sample products (skips existing)
 ```
+
+## WP-CLI commands (our mu-plugin)
+
+| Command | What it does |
+|---------|--------------|
+| `wp ebookstore seed-slides` | Creates the 3 starter Hero Slides from `sample-content/hero/` (safe to run twice) |
+| `wp ebookstore seed-demo` | Creates the ~50-eBook demo catalogue (safe to run twice; refuses on `APP_ENV=production` without `--force`) |
+| `wp ebookstore remove-demo [--yes] [--include-ordered]` | Deletes only demo eBooks, their covers/PDFs and empty demo categories; never touches orders |
