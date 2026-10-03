@@ -1,10 +1,11 @@
 <?php
 /**
- * Home page: hero, trust row and the eBook grid.
+ * Home page: hero (carousel or default), trust row and the home sections
+ * (Bestsellers, Editor's Picks, Browse by Category, New Arrivals, promo strip —
+ * managed in WP admin → Home Page → Sections).
  *
- * The grid uses the [products] shortcode, so cards share the same markup and
- * hooks as the shop page (cover, badge, title, author, price, short
- * description, "View Details" and "Buy Now").
+ * If every section is switched off, a plain grid of the newest eBooks is shown
+ * so the page never looks empty.
  *
  * @package EbookStoreChild
  */
@@ -25,16 +26,18 @@ $ebookstore_shop = function_exists( 'wc_get_page_permalink' ) ? wc_get_page_perm
 			<?php ebookstore_child_trust_row( 'band' ); ?>
 		</div>
 
-		<section id="ebooks" class="ebook-section ebook-reveal" aria-labelledby="ebook-grid-title" tabindex="-1">
-			<div class="ebook-section__header">
-				<h2 id="ebook-grid-title" class="ebook-section__title"><?php esc_html_e( 'Our eBooks', 'ebookstore-child' ); ?></h2>
-				<a class="ebook-section__link" href="<?php echo esc_url( $ebookstore_shop ); ?>">
-					<?php esc_html_e( 'View all eBooks', 'ebookstore-child' ); ?>
-					<?php echo ebookstore_child_icon( 'arrow', 18 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?>
-				</a>
-			</div>
-			<?php echo do_shortcode( '[products limit="12" columns="4" orderby="date" order="DESC"]' ); ?>
-		</section>
+		<?php if ( ! ebookstore_child_home_sections() ) : ?>
+			<section id="ebooks" class="ebook-section ebook-reveal" aria-labelledby="ebook-grid-title" tabindex="-1">
+				<div class="ebook-section__header">
+					<h2 id="ebook-grid-title" class="ebook-section__title"><?php esc_html_e( 'Our eBooks', 'ebookstore-child' ); ?></h2>
+					<a class="ebook-section__link" href="<?php echo esc_url( $ebookstore_shop ); ?>">
+						<?php esc_html_e( 'View all eBooks', 'ebookstore-child' ); ?>
+						<?php echo ebookstore_child_icon( 'arrow', 18 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?>
+					</a>
+				</div>
+				<?php echo do_shortcode( '[products limit="12" columns="4" orderby="date" order="DESC"]' ); ?>
+			</section>
+		<?php endif; ?>
 
 	</main>
 </div>

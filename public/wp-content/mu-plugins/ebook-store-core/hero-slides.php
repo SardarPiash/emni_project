@@ -28,8 +28,8 @@ add_action(
 				'labels'              => array(
 					'name'          => __( 'Hero Slides', 'ebook-store' ),
 					'singular_name' => __( 'Hero Slide', 'ebook-store' ),
-					'menu_name'     => __( 'Hero Slides', 'ebook-store' ),
-					'all_items'     => __( 'All Slides', 'ebook-store' ),
+					'menu_name'     => __( 'Home Page', 'ebook-store' ),
+					'all_items'     => __( 'Hero Slides', 'ebook-store' ),
 					'add_new'       => __( 'Add New Slide', 'ebook-store' ),
 					'add_new_item'  => __( 'Add New Hero Slide', 'ebook-store' ),
 					'edit_item'     => __( 'Edit Hero Slide', 'ebook-store' ),
@@ -400,7 +400,7 @@ add_action(
 		add_submenu_page(
 			'edit.php?post_type=' . EBOOKSTORE_SLIDE_PT,
 			__( 'Slideshow settings', 'ebook-store' ),
-			__( 'Settings', 'ebook-store' ),
+			__( 'Slideshow Settings', 'ebook-store' ),
 			'edit_pages',
 			EBOOKSTORE_HERO_SETTINGS,
 			'ebookstore_render_hero_settings'

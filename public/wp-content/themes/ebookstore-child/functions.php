@@ -66,6 +66,7 @@ require_once __DIR__ . '/inc/header.php';
 require_once __DIR__ . '/inc/trust.php';
 require_once __DIR__ . '/inc/badges.php';
 require_once __DIR__ . '/inc/hero.php';
+require_once __DIR__ . '/inc/sections.php';
 
 /* -------------------------------------------------------------------------
  * Assets: self-hosted fonts, main stylesheet, no Google Fonts / Customizer CSS

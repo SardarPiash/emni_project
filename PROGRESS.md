@@ -284,8 +284,8 @@ Working locally at `http://localhost:8080` (native Windows: PHP 8.3, MySQL 9.7, 
 |-------|------|--------|
 | 8 | Impact analysis, research, design proposal | ✅ Complete (2026-10-03) — approved by user |
 | 9 | Design refresh and homepage layout | ✅ Complete (2026-10-03) |
-| 10 | Hero banner / carousel with admin | ✅ Complete (2026-10-03) — waiting for "next" |
-| 11 | Demo catalog (50) + homepage sections | ⏳ |
+| 10 | Hero banner / carousel with admin | ✅ Complete (2026-10-03) |
+| 11 | Demo catalog (50) + homepage sections | ✅ Complete (2026-10-03) — waiting for "next" |
 | 12 | Regression test, polish, deploy notes | ⏳ |
 
 ## Phase 8 — summary (2026-10-03)
@@ -336,3 +336,24 @@ Working locally at `http://localhost:8080` (native Windows: PHP 8.3, MySQL 9.7, 
 
 ### Notes
 - Button links are stored as full URLs (`http://localhost:8080/shop/`) → fixed by the deploy search-replace (add to DEPLOY.md in Phase 12).
+
+## Phase 11 — Demo catalog (50 products) and homepage sections (2026-10-03)
+
+### Done
+- **`wp ebookstore seed-demo`** (mu-plugin `ebook-store-core/demo-data.php`, loaded only in WP-CLI): 44 new fictional eBooks from `sample-content/demo-books.json` + the 6 original samples tagged as demo = **50 demo eBooks** in 8 categories (Business 6, Productivity 7, Technology 7, Fiction 7, Wellness 6, Finance 6, Cooking 6, Travel 5). Each: Virtual, Downloadable, Sold individually, $5.99–$21.99, short + long English description, generated original 2:3 WebP cover (3 layouts × category colours, avg 14 KB), own demo PDF in `woocommerce_uploads/demo/` (unguessable name), 9 Featured, publish dates spread over 240 days (11 "New"), demo `total_sales` 3–480. Everything tagged `_ebookstore_demo` (products, covers, categories); PDF paths stored in `_ebookstore_demo_files`. Safe to run twice; refuses on `APP_ENV=production` without `--force`. "The Art of Short Stories" moved Writing → Fiction; empty "Writing" category removed. Three titles renamed to avoid similarity with real books.
+- **`wp ebookstore remove-demo [--yes] [--include-ordered]`**: deletes only demo-tagged eBooks, their demo covers, PDFs (only inside `woocommerce_uploads`) and empty demo categories; never touches orders; by default keeps demo eBooks that appear in **any** order.
+  - **Bug found and fixed during testing:** the first version checked `wc_order_product_lookup`, which ignores failed/pending orders, so "Everyday Home Cooking" (only in a failed order) was deleted. Now checks order line items of all statuses. The book was recreated (`sample-content/create-products.php`, new ID #239) and re-tagged; orders and their line items were never affected (14 orders / 14 items before and after).
+- **Home page sections** (child theme `inc/sections.php`, `template-parts/sections/{products,categories,promo}.php`): Bestsellers (`best_selling`), Editor's Picks (featured), Browse by Category (8 cards with newest cover + count), New Arrivals, promotional strip; each with "View all" (shop `?orderby=popularity`, `?ebook_list=featured`, `?orderby=date`, shop). Grids on desktop; product rows swipe horizontally on phones (CSS scroll-snap, no JS); category cards 2 per row on phones. First visible section gets `id="ebooks"` (hero button target). All sections off → fallback "Our eBooks" grid.
+- **Admin: Home Page → Sections** (mu-plugin `ebook-store-core/homepage-sections.php`): show/hide, title, number of items (4/8/12) per section, promo title/text/button. Menu renamed **Home Page** (Hero Slides, Add New Slide, Slideshow Settings, Sections).
+- **Shop for 50+ eBooks:** category filter dropdown in the toolbar (navigates on change; `<noscript>` Go button), "Showing 1–12 of 50 results", 5 pages, sorting; Editor's Picks list (`?ebook_list=featured`, title from the section setting).
+- Badges moved to the top-right of the cover (no overlap with cover text); section focus ring removed; promo strip sits on the footer.
+
+### Tests (all passed)
+- Seed twice → 44 skipped. 50 published / 50 demo / 50 covers / 50 PDFs on disk.
+- Home: 5 sections in order, correct products per section, category counts; shop page 1 = 12 cards, page 5 = 2; Travel = 5; Editor's Picks = 9; filter pre-selects the current category; no-JS `?product_cat=finance` = 6.
+- Sections admin as `ebook_manager`: hide/rename/count/promo text (HTML stripped), all off → fallback grid, restore defaults; no nonce 403, logged out 400.
+- remove-demo (with DB backup `backups/before-remove-demo-test.sql`) → see bug above; re-seed restored everything.
+- Regression: #240 GBP success with a new demo eBook (Slow Travel Europe) → completed + PDF + email (1 link); #241 USD fail → failed, 0 downloads, "unsuccessful" email; checkout fields unchanged; dummy gateway 0 changes; no PHP errors.
+
+### ⚠️ Before going live
+Demo sales counts (and the "Bestseller" badges/section they drive) are **fake**. Run `wp ebookstore remove-demo` (or get the client's written approval) before deploying, and never import this local database into the live site with demo data in it.

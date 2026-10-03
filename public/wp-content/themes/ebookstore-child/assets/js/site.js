@@ -43,6 +43,18 @@
 		}
 	}
 
+	/* ---------- Shop category filter: go to the category page on change ---------- */
+	var navSelects = document.querySelectorAll( 'select[data-ebook-navigate]' );
+	for ( var n = 0; n < navSelects.length; n++ ) {
+		navSelects[ n ].addEventListener( 'change', function () {
+			var option = this.options[ this.selectedIndex ];
+			var url = option && option.getAttribute( 'data-url' );
+			if ( url ) {
+				window.location.href = url;
+			}
+		} );
+	}
+
 	/* ---------- 2. "Added to cart" feedback ---------- */
 	function bumpCart() {
 		if ( reduceMotion ) {
