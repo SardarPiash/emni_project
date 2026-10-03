@@ -57,6 +57,16 @@ function ebookstore_child_asset_version( $relative ) {
 }
 
 /* -------------------------------------------------------------------------
+ * Components (Phase 9 redesign)
+ * ---------------------------------------------------------------------- */
+
+require_once __DIR__ . '/inc/icons.php';
+require_once __DIR__ . '/inc/assets.php';
+require_once __DIR__ . '/inc/header.php';
+require_once __DIR__ . '/inc/trust.php';
+require_once __DIR__ . '/inc/badges.php';
+
+/* -------------------------------------------------------------------------
  * Assets: self-hosted fonts, main stylesheet, no Google Fonts / Customizer CSS
  * ---------------------------------------------------------------------- */
 
@@ -102,7 +112,7 @@ add_filter( 'storefront_google_font_families', '__return_empty_array' );
 add_action(
 	'init',
 	static function () {
-		// Header: no product search (small catalog).
+		// Header: Storefront's search widget is replaced by our own (inc/header.php).
 		remove_action( 'storefront_header', 'storefront_product_search', 40 );
 
 		// Footer: replace widgets + Storefront credit with our footer.
@@ -338,6 +348,7 @@ function ebookstore_child_footer() {
 	</div>
 	<div class="ebook-footer__bottom">
 		<p>&copy; <?php echo esc_html( gmdate( 'Y' ) . ' ' . $name ); ?>. <?php esc_html_e( 'All rights reserved.', 'ebookstore-child' ); ?></p>
+		<p class="ebook-footer__trust"><?php esc_html_e( 'Instant PDF delivery · Secure checkout · Prices in USD or GBP', 'ebookstore-child' ); ?></p>
 	</div>
 	<?php
 }

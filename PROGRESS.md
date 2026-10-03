@@ -283,7 +283,7 @@ Working locally at `http://localhost:8080` (native Windows: PHP 8.3, MySQL 9.7, 
 | Phase | Name | Status |
 |-------|------|--------|
 | 8 | Impact analysis, research, design proposal | ✅ Complete (2026-10-03) — approved by user |
-| 9 | Design refresh and homepage layout | 🔄 In progress |
+| 9 | Design refresh and homepage layout | ✅ Complete (2026-10-03) — waiting for "next" |
 | 10 | Hero banner / carousel with admin | ⏳ |
 | 11 | Demo catalog (50) + homepage sections | ⏳ |
 | 12 | Regression test, polish, deploy notes | ⏳ |
@@ -295,3 +295,26 @@ Working locally at `http://localhost:8080` (native Windows: PHP 8.3, MySQL 9.7, 
 - Images: Unsplash + Pexels licences verified 2026-10-03 (free commercial use, attribution optional; no unaltered resale, no implied endorsement, avoid identifiable people/brands) → `IMAGE_CREDITS.md`. Covers: generated originals only.
 - **Live site finding:** ebookstore.tech runs a different build (fse-book-store theme + Elementor, 6 products, no currency switcher) — none of this project is live. Ask again before any deployment (Phase 12).
 - Safety (done at Phase 9 start): tag `before-ui-redesign` (010c5af), branch `feature/ui-redesign`, DB backup `backups/before-ui-redesign.sql` (via `bin/export-db.ps1`; `wp db export` fails on this PC). Rollback: `git checkout main` + import that file.
+
+## Phase 9 — Design refresh and homepage layout (2026-10-03)
+
+### Done (child theme only — mu-plugin and dummy gateway unchanged)
+- Safety first: tag `before-ui-redesign`, branch `feature/ui-redesign`, DB backup `backups/before-ui-redesign.sql`.
+- Design tokens added to `main.css` `:root`: `--color-primary-soft`, `--color-accent-soft`, spacing scale `--space-1…8`, `--shadow-1/2`, `--ease`. Palette and fonts unchanged.
+- New theme structure: `inc/icons.php` (inline SVG set), `inc/assets.php` (enqueue `assets/css/components.css` 12 KB + `assets/js/site.js` 2.6 KB, deferred, no library), `inc/header.php`, `inc/trust.php`, `inc/badges.php`, `template-parts/hero-default.php`, `woocommerce/product-searchform.php` (template override).
+- **Header:** product search box (rounded, icon button; full width on phones), cart = bag icon + count badge + subtotal (replaces Storefront's pluggable `storefront_cart_link`, so AJAX fragments still update it); menu + USD/GBP switcher unchanged.
+- **Hero:** two columns (text + stack of the 3 latest covers; covers hidden < 900px), "Browse eBooks" + "View all"; saved as `template-parts/hero-default.php` = Phase 10 fallback.
+- **Trust elements:** icon row (Instant PDF download · Secure checkout · Delivered to your email · Read on any device) — band under the hero, compact on product page (replaces the text list), under "Proceed to checkout" and under "Place order"; footer trust line.
+- **Product cards:** badge over the cover (Bestseller = top 3 by real WooCommerce sales count with ≥ 1 sale, cached 1 h, refreshed on completed/processing orders; New = < 30 days), stronger hover lift/shadow, 2-line title / 3-line excerpt clamp, button press feedback. Product page: badge above the title, sticky cover on desktop.
+- **Animations:** reveal-on-scroll (IntersectionObserver; content visible without JS; 2.5 s safety net), card/button/hero-cover hovers, cart badge pulse after "added to cart"; all off with `prefers-reduced-motion`; nothing animated on cart/checkout.
+- Screenshots: home 1440 + 375, product, cart, checkout 1440 (reduced-motion run to see final state).
+
+### Regression (all passed)
+- #49 GBP success → completed, PDF download 200 `application/pdf` "Mindful Mornings.pdf" identical to source, limit 5 / expiry 30 days; email "ready to download" with 1 link sent via Gmail + admin new order.
+- #50 USD failure → failed, 0 download permissions; "unsuccessful" email (0 links) + admin failed order.
+- Currency switch + "You will be charged in GBP: £6.05" on cart and checkout; checkout fields = first name, last name, email, country.
+- `ebook-dummy-gateway`: 0 files changed. No PHP errors.
+
+### Notes
+- Old log lines (`get_order_currency` deprecated) came from a WP-CLI order listing on 2026-10-02, not from the site; log cleared.
+- Rollback: `git checkout main` + import `backups/before-ui-redesign.sql`.
