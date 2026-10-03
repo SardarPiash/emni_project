@@ -1232,3 +1232,15 @@ a.ebook-banner:hover .ebook-banner__cover:nth-child(2) {
 .woocommerce-pagination .prev::after {
 	content: none;
 }
+
+/* Inline message under a name field (site.js). */
+.ebook-field-note {
+	display: block;
+	margin-top: var(--space-1);
+	color: var(--color-error);
+	font-size: 0.875rem;
+}
+
+.ebook-field-note:empty {
+	display: none;
+}

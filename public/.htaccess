@@ -41,6 +41,23 @@ Options -Indexes
 	</IfModule>
 </FilesMatch>
 
+# Readme / changelog files reveal plugin and theme versions (e.g. the test gateway's README).
+<FilesMatch "^(readme|README|changelog|CHANGELOG)\.(txt|md|html)$">
+	<IfModule mod_authz_core.c>
+		Require all denied
+	</IfModule>
+	<IfModule !mod_authz_core.c>
+		Order allow,deny
+		Deny from all
+	</IfModule>
+</FilesMatch>
+
+# Never run PHP from the uploads folder (uploaded files are only images/PDFs).
+# WooCommerce's own protection of wp-content/uploads/woocommerce_uploads/ stays as it is.
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteRule ^wp-content/uploads/.*\.(php[0-9]?|phtml|phar|pht)$ - [F,L,NC]
+</IfModule>
 # BEGIN WordPress
 # The directives (lines) between "BEGIN WordPress" and "END WordPress" are
 # dynamically generated, and should only be modified via WordPress filters.

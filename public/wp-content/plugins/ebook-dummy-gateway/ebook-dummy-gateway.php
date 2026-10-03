@@ -32,6 +32,21 @@ function ebook_dummy_gateway_env_enabled() {
 	return true === $value || in_array( strtolower( (string) $value ), array( '1', 'true', 'yes', 'on' ), true );
 }
 
+/**
+ * Safety guard: on the live site (APP_ENV=production) the test gateway is
+ * offered only to logged-in shop staff (manage_woocommerce), so the owner can
+ * still test a purchase but customers can never get eBooks for free — even if
+ * DUMMY_GATEWAY_ENABLED is accidentally left on.
+ *
+ * @return bool
+ */
+function ebook_dummy_gateway_allowed_for_visitor() {
+	if ( 'production' !== wp_get_environment_type() ) {
+		return true;
+	}
+	return is_user_logged_in() && current_user_can( 'manage_woocommerce' );
+}
+
 // HPOS compatible; classic checkout only (no Cart/Checkout Blocks integration).
 add_action(
 	'before_woocommerce_init',

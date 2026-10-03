@@ -42,7 +42,8 @@ function ebookstore_child_link( $value ) {
 		$page = get_page_by_path( trim( $value, '/' ) );
 		return ( $page && 'publish' === $page->post_status ) ? get_permalink( $page ) : '';
 	}
-	return wp_http_validate_url( $value ) ? $value : '';
+	$scheme = wp_parse_url( $value, PHP_URL_SCHEME );
+	return in_array( $scheme, array( 'http', 'https' ), true ) && wp_parse_url( $value, PHP_URL_HOST ) ? esc_url_raw( $value, array( 'http', 'https' ) ) : '';
 }
 
 /**

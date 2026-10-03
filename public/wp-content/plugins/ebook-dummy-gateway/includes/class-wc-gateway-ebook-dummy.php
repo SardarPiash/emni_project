@@ -70,7 +70,7 @@ class WC_Gateway_Ebook_Dummy extends WC_Payment_Gateway {
 	 * @return bool
 	 */
 	public function is_available() {
-		return ebook_dummy_gateway_env_enabled() && parent::is_available();
+		return ebook_dummy_gateway_env_enabled() && ebook_dummy_gateway_allowed_for_visitor() && parent::is_available();
 	}
 
 	/**
@@ -136,6 +136,11 @@ class WC_Gateway_Ebook_Dummy extends WC_Payment_Gateway {
 		$order = wc_get_order( $order_id );
 		if ( ! $order ) {
 			wc_add_notice( __( 'Order not found.', 'ebook-dummy-gateway' ), 'error' );
+			return array( 'result' => 'failure' );
+		}
+
+		if ( ! ebook_dummy_gateway_env_enabled() || ! ebook_dummy_gateway_allowed_for_visitor() ) {
+			wc_add_notice( __( 'This payment method is not available.', 'ebook-dummy-gateway' ), 'error' );
 			return array( 'result' => 'failure' );
 		}
 

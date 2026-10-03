@@ -456,3 +456,121 @@ The home banner area should look more attractive, with 2–3 separate promotion 
 
 ### Note for deployment
 The menu items live in the database. On a first launch they come with the DB import. For a code-only update of a live site, edit **Appearance → Menus** by hand: remove My Account, add Bestsellers `/shop/?orderby=popularity` and New Arrivals `/shop/?orderby=date`.
+
+---
+
+# Security hardening (security_prompt.md — Phases S13–S15)
+
+Named S13–S15 here because Phases 13–14 above are the UI follow-ups.
+
+| Phase | Name | Status |
+|-------|------|--------|
+| S13 | Quick audit (no code changes) | ✅ Complete (2026-10-03) — approved |
+| S14 | Implementation | ✅ Complete (2026-10-03) — waiting for "next" |
+| S15 | Testing and report | ⏳ |
+
+## Phase S13 — Audit (2026-10-03)
+
+**Versions:**
+- WordPress 7.1.2 (latest; it is the fix for the actively exploited CVE-2026-87902).
+- WooCommerce 11.1.2 (the denial-of-service bug CVE-2026-48888 was fixed in 11.1.0).
+- CURCY 2.2.17: it fixes the unauthenticated XSS in ≤ 2.2.16. **2.2.18 is available** (a rounding fix for very low exchange rates; USD/GBP is not affected) → update.
+- WP Mail SMTP 4.10.0 OK. WP Mail Logging 1.17.0 OK (it is the fixed version). Storefront 4.6.2 OK. PHP 8.3.33.
+
+**Code audit of our code:** no High issues.
+- **Medium:** `/wp-json/wp/v2/users` is hidden only from logged-out visitors. A logged-in **customer** gets the admin login name (`ebook_manager`; verified). Fix: allow the endpoint only for users who can `edit_posts` / `list_users`.
+- **Low:**
+  - The dummy gateway relies only on `DUMMY_GATEWAY_ENABLED`. If it is left on in production, eBooks are free (suggest also turning it off when `APP_ENV=production`; this needs the user's OK because it touches the gateway).
+  - No `uploads/.htaccess` blocks PHP (already planned in 14.5).
+- **Info:**
+  - Empty salts are not refused in production.
+  - The social-link check does DNS lookups on every page.
+  - `demo-data.php` path prefix check has no trailing slash.
+  - Escape the Editor's Picks title.
+  - The gateway README is publicly readable.
+
+Nonces, capability checks, sanitizing/escaping, SQL and file handling are OK everywhere. There are no AJAX/REST handlers of our own.
+
+**Routes that must stay open:**
+- WooCommerce: `?wc-ajax=` (cart fragments, add to cart, checkout, update_order_review) and `?download_file=` links.
+- CURCY: `admin-ajax.php` (`wmc_get_products_price`, `woomulticurrency_exchange` — cache mode).
+- Our admin forms: `admin-post.php` (admin only).
+- Reviews: `wp-comments-post.php`.
+- Store API: not used by our classic templates, but kept open anyway.
+- None of these are blocked by the plan.
+
+**Real IP on Hostinger:**
+- LiteSpeed puts the real visitor IP in `REMOTE_ADDR` (default).
+- Hostinger CDN (if enabled) replaces it with the CDN IP. Then a header must be trusted, but **only when the request comes from the proxy** (otherwise the header can be faked) → add `SECURITY_TRUSTED_PROXIES`, and take the right-most untrusted IP from `X-Forwarded-For`.
+
+**Plan points that need a small adjustment (customers):**
+1. Names with `\p{L}` only would reject Bengali/Hindi names (vowel signs are `\p{M}`), decomposed accents and the iPhone apostrophe `’` (O’Brien) → also allow `\p{M}` and `’`.
+2. Reset anti-flood must stop **before** WordPress makes a new reset key. Otherwise the second request silently invalidates the first email's link.
+3. The default allowlist `127.0.0.1,::1` would allow everyone if a proxy made all visitors look like localhost → keep it for local only, and warn in production.
+4. Shared mobile IPs (CGNAT): customer email typos count toward an IP block. This only affects admin login from that same IP; the recovery options cover it.
+
+## Phase S14 — Implementation (2026-10-03, branch `feature/security-hardening`)
+
+**Safety setup:** branch `feature/security-hardening`, tag `before-security`, DB backup `backups/before-security.sql` (54 tables, via `bin/export-db.ps1`). Rollback: `git checkout main` + import that file.
+
+**User decisions:**
+- Name rule `\p{L}\p{M}` + `’`.
+- Reset limit stops before the new key.
+- `127.0.0.1/::1` in the allowlist is local only.
+- `SECURITY_TRUSTED_PROXIES` added.
+- Dummy-gateway production guard (staff-only on the live site).
+- CURCY updated to 2.2.18.
+
+**New code** — `mu-plugins/ebook-store-core/security/`, one file per feature, loaded from `ebook-store-core.php`:
+- `core.php`:
+  - settings from `.env`
+  - IP detection: `REMOTE_ADDR`; the proxy header is used only if configured and, with `SECURITY_TRUSTED_PROXIES`, only from those proxies, taking the right-most untrusted `X-Forwarded-For` entry
+  - IPv4/IPv6 + CIDR matching
+  - tables `wp_ebookstore_sec_ips` / `wp_ebookstore_sec_log`
+  - daily clean-up
+  - test-only IP override (`SECURITY_TEST_IP_OVERRIDE`, works only with `APP_ENV=local`, default false)
+- `lockout.php`:
+  - counts failures on wp-login.php, the My Account form and REST Application Passwords, only for protected or unknown usernames, never customers
+  - block after 5 failures within the window
+  - blocked IP: protected/unknown logins refused before the password check (429, `no-store`, `Retry-After`); `/wp-admin/` 429 except `admin-ajax.php` / `admin-post.php`
+  - a correct admin login resets the counter
+  - generic "Invalid username or password."
+- `unlock.php`: the blocked page form → one-time link by email (token stored as SHA-256 hash, 15 min, single use, unblocks only the requesting IP), the same neutral reply for every email, 3 requests per IP per hour, everything logged.
+- `reset-limit.php`: one reset email per account per 120 s, for WooCommerce and wp-login.php. Repeats are stopped before the key is created and redirected to the normal "email sent" result.
+- `validation.php`: checkout + account-details names (letters of all languages, marks, `' ’ - .` and space, max 60); email `maxlength`. The theme `site.js` adds an inline message and `aria-invalid`.
+- `admin.php`:
+  - **Security** menu (manage_options): Blocked IPs (search, pagination, unblock / selected / all, manual block), Allowlist (".env read-only" + "Add my current IP"), Activity log (filter by IP/date, pagination, clear)
+  - own IP highlighted; confirmations, with an extra warning for your own IP
+  - dashboard widget
+  - IP-detection warnings
+- `cli.php`: `wp ebookstore security list-blocked | unblock | unblock-all | allow | disallow`.
+- `hardening.php`:
+  - user REST endpoints only for staff (`edit_posts`) — fixes the S13 Medium finding
+  - author redirect, oEmbed author removed
+  - XML-RPC off + 403 (`SECURITY_DISABLE_XMLRPC`)
+  - version hidden (generator, feeds, `?ver=` on core assets)
+  - nosniff / SAMEORIGIN / Referrer-Policy (+ HSTS if `SECURITY_HSTS`)
+  - secure login cookie in production
+
+**Also changed:**
+- **Audit fixes:**
+  - `wp-config.php`: `FORCE_SSL_ADMIN` + 503 on missing/short keys, in production only
+  - `.htaccess`: readme/changelog files denied, PHP in uploads denied
+  - social links: no DNS lookups
+  - demo-data path check now has a trailing slash
+  - Editor's Picks title escaped
+- **Dummy gateway (approved):** in production only for logged-in `manage_woocommerce` users (in `is_available` + `process_payment`); README noted.
+- **Settings and docs:**
+  - CURCY 2.2.18
+  - `.env`/`.env.example`: 12 `SECURITY_*` keys
+  - DEPLOY.md section 14: live `.env` values, IP check, Hostinger curl checks, LiteSpeed exclusions, "If you are locked out"
+  - PLUGINS.md
+
+**Quick checks** (full tests in S15):
+- 6th wrong admin login → 429; `/wp-admin/` 429 for that IP; `admin-ajax` 200; home 200; other IP unaffected.
+- WP-CLI list/unblock/unblock-all work; an invalid IP is rejected.
+- A customer gets 404 on `/wp/v2/users`; `?author=1` → 301 home; `xmlrpc.php` 403; no `ver=7.1.2` in the source.
+- Security headers present.
+- Names: José, Zoë, O'Brien, O’Brien, Nguyễn, Anne-Marie, সাকিব and "Jr." pass; `<script>`, `' OR '1'='1` and 61 characters are rejected.
+- Regression: USD/GBP success → completed + PDF; USD/GBP fail → failed. Accessibility script OK on 8 pages.
+- The PHP log only had WordPress.org update-check warnings (SSL on this PC, not our code) → cleared.

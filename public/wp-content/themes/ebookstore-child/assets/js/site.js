@@ -78,4 +78,34 @@
 			}
 		} );
 	}
+	/* ---------- Name fields: clear inline message (the server checks the same rule) ---------- */
+	var nameRule;
+	try {
+		nameRule = new RegExp( "^[\p{L}\p{M}][\p{L}\p{M}'\u2019 .\-]*$", 'u' );
+	} catch ( e ) {
+		nameRule = null; // Very old browsers: rely on the server check.
+	}
+	var nameFields = document.querySelectorAll( 'input[data-ebook-name], #account_first_name, #account_last_name' );
+	for ( var f = 0; f < nameFields.length; f++ ) {
+		( function ( input ) {
+			input.maxLength = 60;
+			var note = document.createElement( 'span' );
+			note.className = 'ebook-field-note';
+			note.id = input.id + '-note';
+			note.setAttribute( 'aria-live', 'polite' );
+			input.parentNode.appendChild( note );
+			input.addEventListener( 'blur', function () {
+				var value = input.value.trim();
+				var ok = ! value || ! nameRule || nameRule.test( value );
+				note.textContent = ok ? '' : 'Please use letters, spaces, apostrophes, hyphens or dots only.';
+				if ( ok ) {
+					input.removeAttribute( 'aria-invalid' );
+					input.removeAttribute( 'aria-describedby' );
+				} else {
+					input.setAttribute( 'aria-invalid', 'true' );
+					input.setAttribute( 'aria-describedby', note.id );
+				}
+			} );
+		} )( nameFields[ f ] );
+	}
 } )();

@@ -299,7 +299,7 @@ add_filter(
 	static function ( $title ) {
 		if ( ebookstore_is_featured_list() && is_shop() ) {
 			$sections = ebookstore_home_sections();
-			return $sections['featured']['title'];
+			return esc_html( $sections['featured']['title'] );
 		}
 		return $title;
 	}

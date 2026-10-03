@@ -55,6 +55,17 @@ define( 'SCRIPT_DEBUG', false );
 
 // ---------- Security ----------
 define( 'DISALLOW_FILE_EDIT', (bool) env( 'DISALLOW_FILE_EDIT', true ) );
+if ( 'production' === WP_ENVIRONMENT_TYPE ) {
+	// Live site: admin and login only over HTTPS.
+	define( 'FORCE_SSL_ADMIN', true );
+	// Live site: refuse to run with missing security keys (they protect logins and cookies).
+	foreach ( array( 'AUTH_KEY', 'SECURE_AUTH_KEY', 'LOGGED_IN_KEY', 'NONCE_KEY', 'AUTH_SALT', 'SECURE_AUTH_SALT', 'LOGGED_IN_SALT', 'NONCE_SALT' ) as $ebookstore_key ) {
+		if ( strlen( constant( $ebookstore_key ) ) < 32 ) {
+			header( 'HTTP/1.1 503 Service Unavailable' );
+			exit( 'Site configuration error. Please contact the site owner.' );
+		}
+	}
+}
 
 // ---------- Email: WP Mail SMTP constants (plugin installed in Phase 6) ----------
 define( 'WPMS_ON', true );

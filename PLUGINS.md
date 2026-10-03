@@ -27,7 +27,7 @@ from `C:\projects\ebook-store` in PowerShell (`wp-cli.yml` points WP-CLI to `pub
 | Slug | Version | Install command |
 |------|---------|-----------------|
 | woocommerce | 11.1.2 | `wp plugin install woocommerce --version=11.1.2 --activate` |
-| woo-multi-currency (CURCY) | 2.2.17 | `wp plugin install woo-multi-currency --version=2.2.17 --activate` — currencies + rate are forced from `.env` by the mu-plugin; other settings in Multi Currency (admin menu) |
+| woo-multi-currency (CURCY) | 2.2.18 | `wp plugin install woo-multi-currency --version=2.2.18 --activate` — currencies + rate are forced from `.env` by the mu-plugin; other settings in Multi Currency (admin menu) |
 | wp-mail-smtp | 4.10.0 | `wp plugin install wp-mail-smtp --version=4.10.0 --activate` — configured only by WPMS_* constants in wp-config.php (from .env); no secrets in the database |
 | wp-mail-logging | 1.17.0 | `wp plugin install wp-mail-logging --version=1.17.0 --activate` — email log (admin → WP Mail Logging); logs auto-deleted after 30 days |
 
@@ -35,7 +35,7 @@ from `C:\projects\ebook-store` in PowerShell (`wp-cli.yml` points WP-CLI to `pub
 
 | Path | Type |
 |------|------|
-| `public/wp-content/mu-plugins/ebook-store-core.php` + `ebook-store-core/` (`exchange-rate.php`, `hero-slides.php`, `homepage-sections.php`, `promo-banners.php`, `demo-data.php`, `assets/hero-slides-admin.js`) | must-use plugin |
+| `public/wp-content/mu-plugins/ebook-store-core.php` + `ebook-store-core/` (`exchange-rate.php`, `hero-slides.php`, `homepage-sections.php`, `promo-banners.php`, `demo-data.php`, `security/*.php`, `assets/hero-slides-admin.js`) | must-use plugin |
 | `public/wp-content/themes/ebookstore-child/` | child theme (active) — the UI redesign (hero carousel, sections, badges, icons) is plain PHP/CSS/vanilla JS: **no front-end libraries** (no slider, no animation, no icon font) |
 | `public/wp-content/plugins/ebook-dummy-gateway/` | test-only gateway — active while `DUMMY_GATEWAY_ENABLED=true`; see its README.md to remove |
 
@@ -53,3 +53,4 @@ wp eval-file sample-content/create-products.php   # creates the 6 sample product
 | `wp ebookstore seed-slides` | Creates the 3 starter Hero Slides from `sample-content/hero/` (safe to run twice) |
 | `wp ebookstore seed-demo` | Creates the ~50-eBook demo catalogue (safe to run twice; refuses on `APP_ENV=production` without `--force`) |
 | `wp ebookstore remove-demo [--yes] [--include-ordered]` | Deletes only demo eBooks, their covers/PDFs and empty demo categories; never touches orders |
+| `wp ebookstore security list-blocked \| unblock <ip> \| unblock-all \| allow <ip> \| disallow <ip>` | Admin-login lockout recovery (see DEPLOY.md → "If you are locked out") |

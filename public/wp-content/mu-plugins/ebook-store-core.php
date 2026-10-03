@@ -177,6 +177,11 @@ require_once __DIR__ . '/ebook-store-core/homepage-sections.php';
 require_once __DIR__ . '/ebook-store-core/promo-banners.php';
 require_once __DIR__ . '/ebook-store-core/demo-data.php';
 
+// Security hardening (security_prompt.md) — one file per feature.
+foreach ( array( 'core', 'hardening', 'lockout', 'unlock', 'reset-limit', 'validation', 'admin', 'cli' ) as $ebookstore_sec_file ) {
+	require_once __DIR__ . '/ebook-store-core/security/' . $ebookstore_sec_file . '.php';
+}
+
 /**
  * Currencies come from .env (STORE_BASE_CURRENCY with rate 1,
  * STORE_SECONDARY_CURRENCY); the rate comes from the Exchange Rate module
@@ -359,50 +364,8 @@ function ebookstore_email_footer_text( $text ) {
 add_filter( 'woocommerce_email_footer_text', 'ebookstore_email_footer_text', 20 );
 
 /* -------------------------------------------------------------------------
- * Security hardening (no blog, no remote publishing)
+ * Security hardening: see ebook-store-core/security/ (loaded below).
  * ---------------------------------------------------------------------- */
-
-/**
- * Hide the user list from the public REST API (it reveals login names).
- * Logged-in users (e.g. the block editor) keep access.
- *
- * @param array $endpoints REST endpoints.
- * @return array
- */
-function ebookstore_hide_rest_users( $endpoints ) {
-	if ( ! is_user_logged_in() ) {
-		unset( $endpoints['/wp/v2/users'], $endpoints['/wp/v2/users/(?P<id>[\d]+)'] );
-	}
-	return $endpoints;
-}
-add_filter( 'rest_endpoints', 'ebookstore_hide_rest_users' );
-
-/**
- * No author archives (the store has no blog). Runs before WordPress'
- * canonical redirect, so "?author=1" cannot reveal a login name either.
- */
-function ebookstore_disable_author_archives() {
-	if ( is_author() || isset( $_GET['author'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		wp_safe_redirect( home_url( '/' ), 301 );
-		exit;
-	}
-}
-add_action( 'template_redirect', 'ebookstore_disable_author_archives', 1 );
-
-// XML-RPC is not used: disable it and remove its discovery links.
-add_filter( 'xmlrpc_enabled', '__return_false' );
-add_filter(
-	'wp_headers',
-	static function ( $headers ) {
-		unset( $headers['X-Pingback'] );
-		return $headers;
-	}
-);
-remove_action( 'wp_head', 'rsd_link' );
-
-// Do not advertise exact WordPress / WooCommerce versions.
-remove_action( 'wp_head', 'wp_generator' );
-add_filter( 'the_generator', '__return_empty_string' );
 
 /**
  * No product (cover) images in emails — keeps them short and light.

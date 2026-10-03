@@ -41,3 +41,4 @@ Any real gateway that calls `payment_complete()` (all mainstream gateways do) ke
 - Extends `WC_Payment_Gateway`, classic checkout (`[woocommerce_checkout]`) only.
 - Declares HPOS (`custom_order_tables`) compatibility; not integrated with Cart/Checkout Blocks.
 - Reads `DUMMY_GATEWAY_ENABLED` via the project's `env()` helper (falls back to `getenv()`).
+- Safety guard: when `APP_ENV=production` the gateway is offered (and processes payments) only for logged-in staff with `manage_woocommerce`, so customers can never use it even if the switch is left on.

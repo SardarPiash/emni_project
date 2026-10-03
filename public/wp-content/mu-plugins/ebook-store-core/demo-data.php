@@ -517,7 +517,7 @@ function ebookstore_cli_remove_demo( $args, $assoc_args ) {
 		// PDF files — only inside the protected downloads folder.
 		foreach ( (array) $product->get_meta( '_ebookstore_demo_files' ) as $file ) {
 			$real = realpath( (string) $file );
-			if ( $real && $protected_dir && 0 === strpos( $real, $protected_dir ) && is_file( $real ) ) {
+			if ( $real && $protected_dir && 0 === strpos( $real, trailingslashit( $protected_dir ) ) && is_file( $real ) ) {
 				wp_delete_file( $real );
 			}
 		}

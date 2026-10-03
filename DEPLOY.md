@@ -384,3 +384,65 @@ so take a full Hostinger backup first, and only do it after the owner has confir
 - **Local:** run `git checkout main`, then import `backups/before-ui-redesign.sql`
   (`mysql -u root ebookstore < backups\before-ui-redesign.sql`).
 - **Live site:** re-upload the previous theme and mu-plugin folders. The extra database rows (slides, settings) are harmless.
+
+---
+
+## 14. Security (admin login protection)
+
+Customers are never blocked. Only **admin accounts** (`SECURITY_PROTECTED_ROLES`) and the **admin area** are protected:
+- After 5 failed admin logins or unknown usernames from one IP, that IP cannot open `/wp-admin/` or log in to admin accounts for 2 hours.
+- Shopping, checkout, downloads and customer logins keep working from that IP.
+- Settings are in `.env` (`SECURITY_*`, see `.env.example`); blocks and the allowlist are managed in **wp-admin → Security**.
+
+### 14.1 `.env` on the live site
+
+| Key | Live value |
+|-----|------------|
+| `SECURITY_IP_ALLOWLIST` | **empty** (127.0.0.1/::1 are for the local PC only). Add your own fixed office IP later in wp-admin → Security → Allowlist if you have one. |
+| `SECURITY_HSTS` | `true` **only after** HTTPS works everywhere (section 7) |
+| `SECURITY_TRUSTED_PROXY_HEADER` / `SECURITY_TRUSTED_PROXIES` | empty, **unless Hostinger CDN (or Cloudflare) is switched on**. Then set the header (e.g. `X-Forwarded-For`) and the CDN's IP ranges. |
+| `SECURITY_TEST_IP_OVERRIDE` | `false` (it is ignored in production anyway) |
+| `DUMMY_GATEWAY_ENABLED` | `false` once the real gateway works. While it is still `true`, the test gateway is only shown to logged-in shop staff on the live site, never to customers. |
+
+The live site also forces HTTPS for wp-admin and refuses to start if a security key in `.env` is missing or shorter than 32 characters.
+
+### 14.2 Check IP detection right after deploy
+
+1. Log in to wp-admin and open **Security**. "Your current IP" must match what <https://www.whatismyip.com> shows.
+2. If it shows the server's own IP, a localhost address, or a yellow **Security** warning appears, the site is behind a proxy/CDN. Set `SECURITY_TRUSTED_PROXY_HEADER` and `SECURITY_TRUSTED_PROXIES` in `.env`; otherwise one block would affect every admin.
+
+### 14.3 Verify on Hostinger (`.htaccess` rules do not work on the local PC)
+
+```bash
+curl -I https://yourstore.com/.env                                   # 403 or 404
+curl -I https://yourstore.com/wp-config.php                          # 403
+curl -I https://yourstore.com/xmlrpc.php                             # 403
+curl -I https://yourstore.com/readme.html                            # 403
+curl -I https://yourstore.com/wp-content/plugins/ebook-dummy-gateway/README.md   # 403
+curl -I https://yourstore.com/wp-content/uploads/test.php            # 403 (PHP never runs in uploads)
+curl -I https://yourstore.com/wp-content/uploads/woocommerce_uploads/ # 403
+curl -I https://yourstore.com/                                       # shows X-Content-Type-Options, X-Frame-Options, Referrer-Policy
+curl -s https://yourstore.com/wp-json/wp/v2/users                    # rest_no_route (no usernames)
+```
+
+### 14.4 LiteSpeed Cache (if installed)
+
+Login (`wp-login.php`), **My Account**, **Cart** and **Checkout** must never be cached. LiteSpeed Cache excludes the WooCommerce pages automatically; check under LiteSpeed Cache → Cache → Excludes that `/my-account/`, `/cart/`, `/checkout/` and `wp-login.php` are not cached. The blocked page is sent with `Cache-Control: no-store`.
+
+### 14.5 If you are locked out
+
+You will only ever be blocked from one network (IP), never as an account. Options, easiest first:
+
+1. **Use another network:** for example switch your phone from Wi-Fi to mobile data, and log in there.
+2. **Unlock link:** the blocked page says *"Are you the site owner? Send an unlock link."* Enter your admin email. You get a one-time link that works for 15 minutes and unblocks only your network. You can ask for a link at most 3 times per hour.
+3. **Another admin:** from another network, open wp-admin → **Security → Blocked IPs → Unblock** (or **Allowlist → Add my current IP**).
+4. **Wait** 2 hours (`SECURITY_LOCKOUT_MINUTES`).
+5. **SSH / WP-CLI** (hPanel → Advanced → SSH):
+
+   ```bash
+   wp ebookstore security list-blocked
+   wp ebookstore security unblock 203.0.113.5
+   wp ebookstore security unblock-all
+   wp ebookstore security allow 203.0.113.5      # never block this IP
+   wp ebookstore security disallow 203.0.113.5
+   ```
