@@ -287,7 +287,8 @@ Working locally at `http://localhost:8080` (native Windows: PHP 8.3, MySQL 9.7, 
 | 10 | Hero banner / carousel with admin | ✅ Complete (2026-10-03) |
 | 11 | Demo catalog (50) + homepage sections | ✅ Complete (2026-10-03) |
 | 12 | Regression test, polish, deploy notes | ✅ Complete (2026-10-03) |
-| 13 | User feedback: side banners, carousel controls, shop page, category control | ✅ Complete (2026-10-03) — waiting for review / merge decision |
+| 13 | User feedback: side banners, carousel controls, shop page, category control | ✅ Complete (2026-10-03) — merged into main |
+| 14 | Header and navigation reorganised | ✅ Complete (2026-10-03) — branch `feature/navigation`, waiting for review |
 
 ## Phase 8 — summary (2026-10-03)
 - Verdict: safe if the safeguards are kept. `ebook-dummy-gateway` untouched; checkout/currency/env/email/download logic in the mu-plugin unchanged; redesign = child theme; new admin features = new files in `mu-plugins/ebook-store-core/`.
@@ -427,3 +428,31 @@ The home banner area should look more attractive, with 2–3 separate promotion 
   - #246 USD success and #247 GBP success: completed + PDF download + "ready to download" email (1 link each).
   - #248 USD fail and #249 GBP fail: failed, 0 downloads, "unsuccessful" emails.
   - Charge notices are correct. The accessibility script passes on all 8 pages. PHP log empty. `ebook-dummy-gateway`: 0 lines changed.
+
+## Phase 14 — Header and navigation reorganised (2026-10-03, branch `feature/navigation`)
+
+### Done
+- **Desktop:**
+  - The top bar has the store name on the left, the search centred, and on the right **Sign in / My Account** (person icon) and the cart (bag, count, subtotal).
+  - Below it is a darker navigation strip: **Home · All eBooks ▾ · Bestsellers · New Arrivals** on the left and the compact currency pill on the right.
+  - The active/hover link gets a gold bar on its bottom edge.
+  - "All eBooks ▾" opens a white dropdown card with "All eBooks" plus every category in 2 columns. It is generated automatically (new categories appear by themselves). If the admin adds their own sub-items under All eBooks in Appearance → Menus, those are used instead.
+- **Phones:**
+  - The top row has the store name, an account icon and a cart icon with its count; search is full width below.
+  - The strip has the **☰ Menu** button on the left and USD/GBP on the right. The menu opens full width below, with categories under All eBooks.
+  - Storefront's bottom bar (account + cart) and its script are removed, because both are in the header now.
+- **Menu (Appearance → Menus → Main Menu):** "My Account" removed (now the header icon). Added "Bestsellers" (`/shop/?orderby=popularity`) and "New Arrivals" (`/shop/?orderby=date`) as relative links, highlighted when that list is open (All eBooks is then not highlighted).
+- **Code:**
+  - New `assets/css/header.css`.
+  - `inc/header.php`: account/cart group, category dropdown, menu highlight, script dequeue.
+  - `user` icon added.
+  - Old Phase 4 header/nav layout rules removed from `main.css`.
+
+### Tests (all passed)
+- Screenshots at 1440/1024/768/375, plus the dropdown open (desktop) and the menu open (phone).
+- Label "Sign in" when logged out and "My Account" when logged in. The AJAX add-to-cart fragment updates the header count (1). On a category page the category is highlighted in the dropdown.
+- Accessibility script OK on all 8 pages.
+- Purchases: GBP success → completed + PDF; USD fail → failed. PHP log empty. Dummy gateway: 0 changes.
+
+### Note for deployment
+The menu items live in the database. On a first launch they come with the DB import. For a code-only update of a live site, edit **Appearance → Menus** by hand: remove My Account, add Bestsellers `/shop/?orderby=popularity` and New Arrivals `/shop/?orderby=date`.
