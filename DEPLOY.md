@@ -350,6 +350,7 @@ the mu-plugin only**: no new third-party plugins and no new database tables. Pay
 | **Add New Slide** | desktop image (1600×900, required), optional phone image (800×1000), heading, subheading, button text + link (`/shop/`, `#ebooks` or a full `https://` link), *Show this slide on the website*; display order is set in the *Order* box |
 | **Slideshow Settings** | seconds per slide (0 = no automatic change; empty = `.env` value) |
 | **Side Banners** | the 2 promotion banners next to the slideshow: label, title, text, button, link, colour, and 2 book covers from a list **or** your own image (about 800×500) |
+| **Appearance → Menus** (not under Home Page) | the links in the navigation strip. *All eBooks* gets its category dropdown automatically. For a code-only update of a live site, add *Bestsellers* `/shop/?orderby=popularity` and *New Arrivals* `/shop/?orderby=date` and remove *My Account* (it is the person icon in the header now) |
 | **Sections** | show/hide, title and number of items for Bestsellers, Editor's Picks, Browse by Category, New Arrivals and the promo strip; for **Browse by Category** tick the categories and number them 1, 2, 3 … (none ticked = automatic). The card picture = Products → Categories → *Thumbnail*, otherwise the newest cover |
 
 - With 0 slides shown you get the default hero, with 1 a static banner, and with 2 or more a carousel (arrows, dots, swipe). Autoplay pauses on hover; set it to 0 for no automatic change.

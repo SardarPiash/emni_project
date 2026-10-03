@@ -1,0 +1,491 @@
+/* ==========================================================================
+   Header and navigation (loaded after main.css and components.css)
+
+   Desktop   top bar:   [store name] [—— search ——] [account] [cart]
+             nav strip: [Home  All eBooks ▾  Bestsellers  New Arrivals] [USD | GBP]
+   Phones    top bar:   [store name]                 [account] [cart]
+                        [———————————— search ————————————]
+             nav strip: [☰ Menu]                          [USD | GBP]
+   ========================================================================== */
+
+.site-header {
+	padding: 0;
+	border-bottom: 0;
+	background: var(--color-primary);
+}
+
+/* Storefront clearfix pseudo-elements would become grid/flex items. */
+.site-header > .col-full::before,
+.site-header > .col-full::after,
+.storefront-primary-navigation > .col-full::before,
+.storefront-primary-navigation > .col-full::after {
+	display: none;
+}
+
+.site-header .secondary-navigation:empty {
+	display: none;
+}
+
+/* ---------- Top bar ---------- */
+.site-header > .col-full {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	grid-template-areas:
+		"brand actions"
+		"search search";
+	align-items: center;
+	gap: var(--space-3) var(--space-4);
+	padding-top: var(--space-4);
+	padding-bottom: var(--space-4);
+}
+
+.site-header > .col-full .site-branding,
+.woocommerce-active .site-header > .col-full .site-branding {
+	grid-area: brand;
+	float: none;
+	width: auto;
+	min-width: 0;
+	margin: 0;
+}
+
+.site-header .site-title {
+	margin: 0;
+	line-height: 1.2;
+}
+
+.site-header .site-title,
+.site-header .site-title a {
+	font-size: 1.375rem;
+	white-space: nowrap;
+}
+
+.site-header .ebook-search {
+	grid-area: search;
+	flex: none;
+	order: 0;
+	width: 100%;
+}
+
+.ebook-header-actions {
+	grid-area: actions;
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: var(--space-1);
+}
+
+@media (min-width: 768px) {
+	.site-header > .col-full {
+		grid-template-columns: auto minmax(0, 1fr) auto;
+		grid-template-areas: "brand search actions";
+		gap: var(--space-6);
+		padding-top: var(--space-4);
+		padding-bottom: var(--space-4);
+	}
+
+	.site-header .site-title,
+	.site-header .site-title a {
+		font-size: 1.625rem;
+	}
+
+	.site-header .ebook-search {
+		justify-self: center;
+		max-width: 36rem;
+	}
+}
+
+/* Account + cart: same height, icon above/next to a short label. */
+.site-header .ebook-account,
+.site-header .ebook-account:visited,
+.site-header .site-header-cart .ebook-cart {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+	min-height: var(--tap);
+	padding: 0.375rem 0.625rem;
+	border-radius: var(--radius-small);
+	color: var(--color-surface);
+	font-size: 0.9375rem;
+	font-weight: 600;
+	text-decoration: none;
+	white-space: nowrap;
+	transition: background-color 0.2s var(--ease);
+}
+
+.site-header .ebook-account:hover,
+.site-header .site-header-cart .ebook-cart:hover {
+	background: rgba(255, 255, 255, 0.1);
+	color: var(--color-surface);
+	text-decoration: none;
+}
+
+.site-header .site-header-cart,
+.woocommerce-active .site-header .site-header-cart {
+	position: relative;
+	float: none;
+	width: auto;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.site-header .site-header-cart > li {
+	margin: 0;
+}
+
+.site-header .ebook-cart__total {
+	font-variant-numeric: tabular-nums;
+}
+
+/* Phones: icons only (labels stay for screen readers). */
+@media (max-width: 599px) {
+	.ebook-account__label,
+	.site-header .ebook-cart__total {
+		position: absolute !important;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip: rect(1px, 1px, 1px, 1px);
+		white-space: nowrap;
+	}
+
+	.site-header .ebook-account,
+	.site-header .site-header-cart .ebook-cart {
+		justify-content: center;
+		min-width: var(--tap);
+		padding: 0.375rem;
+	}
+}
+
+/* Mini cart (hover/focus on desktop): right-aligned card. */
+.site-header .site-header-cart .widget_shopping_cart {
+	width: 20rem;
+	padding: var(--space-4);
+	border-radius: var(--radius);
+	box-shadow: var(--shadow-2);
+}
+
+.site-header .site-header-cart:hover .widget_shopping_cart,
+.site-header .site-header-cart.focus .widget_shopping_cart {
+	right: 0;
+	left: auto;
+}
+
+/* ---------- Navigation strip ---------- */
+.storefront-primary-navigation {
+	background: var(--color-primary-dark);
+	border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.storefront-primary-navigation > .col-full {
+	position: relative;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0 var(--space-4);
+	min-height: 56px;
+	padding-bottom: 0;
+}
+
+.storefront-primary-navigation .main-navigation,
+.woocommerce-active .site-header .main-navigation {
+	flex: 1 1 auto;
+	float: none;
+	width: auto;
+	margin: 0;
+	padding: 0;
+}
+
+.ebook-currency--nav {
+	padding: 0;
+}
+
+/* Compact currency pill in the strip. */
+.ebook-currency--nav .ebook-currency__label {
+	color: rgba(250, 247, 242, 0.75);
+	font-size: 0.75rem;
+}
+
+.ebook-currency--nav .ebook-currency__list {
+	border-color: rgba(250, 247, 242, 0.35);
+}
+
+.ebook-currency--nav .ebook-currency__option,
+.ebook-currency--nav .ebook-currency__option:visited {
+	min-width: 3.75rem;
+	min-height: 36px;
+	padding: 0 0.75rem;
+	font-size: 0.875rem;
+}
+
+.ebook-currency--nav .ebook-currency__option:hover {
+	background: rgba(255, 255, 255, 0.1);
+}
+
+.ebook-currency--nav .ebook-currency__option.is-active,
+.ebook-currency--nav .ebook-currency__option.is-active:hover {
+	background: var(--color-gold);
+	color: var(--color-primary-dark);
+}
+
+/* Desktop menu links */
+@media (min-width: 768px) {
+	.main-navigation ul.menu,
+	.main-navigation ul.nav-menu {
+		display: flex;
+		align-items: stretch;
+		margin: 0;
+	}
+
+	.main-navigation ul.menu > li,
+	.main-navigation ul.nav-menu > li {
+		position: relative;
+		display: flex;
+	}
+
+	.main-navigation ul.menu > li > a,
+	.main-navigation ul.nav-menu > li > a,
+	.main-navigation ul.menu > li:first-child > a {
+		position: relative;
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+		min-height: 56px;
+		padding: 0 var(--space-4);
+		color: rgba(255, 255, 255, 0.88);
+		font-size: 0.9375rem;
+		font-weight: 600;
+		text-decoration: none;
+		transition: color 0.2s var(--ease), background-color 0.2s var(--ease);
+	}
+
+	.main-navigation ul.menu > li:first-child > a {
+		margin-left: calc(-1 * var(--space-4));
+	}
+
+	/* Active / hover: gold bar on the bottom edge instead of an underline. */
+	.main-navigation ul.menu > li > a::before {
+		content: "";
+		display: block;
+		position: absolute;
+		right: var(--space-4);
+		bottom: 0;
+		left: var(--space-4);
+		height: 3px;
+		border-radius: 3px 3px 0 0;
+		background: var(--color-gold);
+		transform: scaleX(0);
+		transition: transform 0.2s var(--ease);
+	}
+
+	.main-navigation ul.menu > li > a:hover,
+	.main-navigation ul.menu > li.focus > a,
+	.main-navigation ul.menu > li.current-menu-item > a,
+	.main-navigation ul.menu > li.current-menu-ancestor > a {
+		color: var(--color-surface);
+		text-decoration: none;
+	}
+
+	.main-navigation ul.menu > li > a:hover::before,
+	.main-navigation ul.menu > li.current-menu-item > a::before,
+	.main-navigation ul.menu > li.current-menu-ancestor > a::before {
+		transform: scaleX(1);
+	}
+
+	/* Dropdown arrow (replaces Storefront's icon font). */
+	.main-navigation ul.menu > li.menu-item-has-children > a::after {
+		content: "";
+		display: inline-block;
+		width: 7px;
+		height: 7px;
+		margin: -3px 0 0 var(--space-1);
+		border-right: 2px solid currentColor;
+		border-bottom: 2px solid currentColor;
+		font-family: inherit;
+		transform: rotate(45deg);
+		transition: transform 0.2s var(--ease);
+	}
+
+	.main-navigation ul.menu > li.menu-item-has-children:hover > a::after,
+	.main-navigation ul.menu > li.menu-item-has-children.focus > a::after {
+		margin-top: 3px;
+		transform: rotate(-135deg);
+	}
+
+	/* Dropdown card: categories in 2 columns. */
+	.main-navigation ul.menu ul.sub-menu {
+		top: 100%;
+		display: grid;
+		grid-template-columns: repeat(2, minmax(10rem, 1fr));
+		gap: 2px var(--space-2);
+		width: max-content;
+		padding: var(--space-3);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius);
+		background: var(--color-surface);
+		box-shadow: var(--shadow-2);
+		float: none;
+	}
+
+	.main-navigation ul.menu ul.sub-menu li {
+		display: block;
+		width: auto;
+	}
+
+	.main-navigation ul.menu ul.sub-menu li a,
+	.main-navigation ul.menu ul.sub-menu li a:visited {
+		display: flex;
+		align-items: center;
+		width: auto;
+		min-height: 40px;
+		padding: 0.375rem 0.75rem;
+		border-radius: var(--radius-small);
+		background: transparent;
+		color: var(--color-text);
+		font-size: 0.9375rem;
+		font-weight: 500;
+		text-decoration: none;
+	}
+
+	.main-navigation ul.menu ul.sub-menu li a:hover,
+	.main-navigation ul.menu ul.sub-menu li.current-menu-item > a {
+		background: var(--color-primary-soft);
+		color: var(--color-primary);
+		text-decoration: none;
+	}
+
+	/* "All eBooks" link spans the full width of the card. */
+	.main-navigation ul.menu ul.sub-menu li:first-child {
+		grid-column: 1 / -1;
+		margin-bottom: var(--space-1);
+		padding-bottom: var(--space-1);
+		border-bottom: 1px solid var(--color-border);
+	}
+
+	.main-navigation ul.menu ul.sub-menu li:first-child a {
+		color: var(--color-primary);
+		font-weight: 700;
+	}
+
+	.main-navigation ul.menu ul.sub-menu li a::after,
+	.main-navigation ul.menu ul.sub-menu li a::before {
+		display: none;
+	}
+}
+
+/* ---------- Phones: Menu button left, currency right, menu opens below ---------- */
+@media (max-width: 767px) {
+	.storefront-primary-navigation > .col-full {
+		min-height: 60px;
+		padding-top: var(--space-2);
+		padding-bottom: var(--space-2);
+	}
+
+	.storefront-primary-navigation .main-navigation,
+	.storefront-primary-navigation .main-navigation.toggled {
+		flex: 1 1 100%;
+		order: 0;
+		margin: 0;
+	}
+
+	.ebook-currency--nav {
+		position: absolute;
+		top: var(--space-2);
+		right: var(--gutter);
+		order: 0;
+	}
+
+	.ebook-currency--nav .ebook-currency__option,
+	.ebook-currency--nav .ebook-currency__option:visited {
+		min-height: 40px;
+	}
+
+	.site-header button.menu-toggle,
+	.storefront-primary-navigation .main-navigation.toggled .menu-toggle {
+		float: none;
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-2);
+		min-height: 44px;
+		margin: 0;
+		padding: 0 var(--space-4) 0 2.75rem;
+		border: 1px solid rgba(255, 255, 255, 0.35);
+		border-radius: var(--radius-small);
+		background: transparent;
+		color: var(--color-surface);
+		font-weight: 600;
+	}
+
+	.site-header button.menu-toggle:hover {
+		background: rgba(255, 255, 255, 0.1);
+	}
+
+	/* Open menu: full-width list under the strip. */
+	.main-navigation.toggled .handheld-navigation {
+		margin: var(--space-2) calc(-1 * var(--gutter)) calc(-1 * var(--space-2));
+		padding: var(--space-2) var(--gutter) var(--space-3);
+		border-top: 1px solid rgba(255, 255, 255, 0.08);
+		background: var(--color-primary-dark);
+	}
+
+	.main-navigation .handheld-navigation ul.menu li a {
+		min-height: var(--tap);
+		padding: 0.625rem 0;
+		color: var(--color-surface);
+		font-weight: 600;
+		text-decoration: none;
+	}
+
+	.main-navigation .handheld-navigation ul.menu > li {
+		border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+	}
+
+	.main-navigation .handheld-navigation ul.menu > li:last-child {
+		border-bottom: 0;
+	}
+
+	.main-navigation .handheld-navigation ul.sub-menu {
+		margin: 0 0 var(--space-2) var(--space-4);
+	}
+
+	.main-navigation .handheld-navigation ul.sub-menu li a {
+		min-height: 40px;
+		padding: 0.5rem 0;
+		color: rgba(255, 255, 255, 0.85);
+		font-weight: 500;
+	}
+
+	.main-navigation .handheld-navigation .current-menu-item > a {
+		color: var(--color-gold);
+		text-decoration: none;
+	}
+
+	/* Storefront's sub-menu toggle button */
+	.main-navigation .handheld-navigation .dropdown-toggle {
+		min-width: var(--tap);
+		min-height: var(--tap);
+		border: 0;
+		background: transparent;
+		color: var(--color-surface);
+	}
+}
+
+/* No bottom bar on phones any more: remove the space Storefront reserves for it. */
+@media (max-width: 767px) {
+	.storefront-handheld-footer-bar {
+		display: none;
+	}
+
+	.site-footer {
+		padding-bottom: 2rem;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.main-navigation ul.menu > li > a,
+	.main-navigation ul.menu > li > a::before,
+	.main-navigation ul.menu > li.menu-item-has-children > a::after {
+		transition: none;
+	}
+}

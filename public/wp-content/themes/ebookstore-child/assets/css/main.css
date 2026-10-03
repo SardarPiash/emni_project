@@ -1192,32 +1192,6 @@ ul.products li.product .star-rating {
    Phase 4 â€” currency switcher, cart, checkout
    ========================================================================== */
 
-/* ---------- Header top row: brand left, currency switcher right ---------- */
-.site-header > .col-full {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	justify-content: space-between;
-	gap: 0.75rem 1rem;
-}
-
-.site-header > .col-full::before,
-.site-header > .col-full::after {
-	display: none;
-}
-
-.site-header > .col-full .site-branding,
-.woocommerce-active .site-header > .col-full .site-branding {
-	float: none;
-	width: auto;
-	margin: 0;
-	flex: 1 1 auto;
-}
-
-.site-header .secondary-navigation:empty {
-	display: none;
-}
-
 .ebook-currency {
 	display: flex;
 	align-items: center;
@@ -1612,79 +1586,6 @@ table.cart td.product-remove a.remove {
 /* Remove (x) icon uses the error colour (5.5:1 on white) and inverts on hover. */
 table.cart td.product-remove a.remove::before {
 	color: inherit;
-}
-
-/* ---------- Navigation bar: menu | currency switcher | cart ---------- */
-.storefront-primary-navigation > .col-full {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: 0.5rem 1rem;
-}
-
-.storefront-primary-navigation > .col-full::before,
-.storefront-primary-navigation > .col-full::after {
-	display: none;
-}
-
-.storefront-primary-navigation .main-navigation,
-.woocommerce-active .site-header .main-navigation {
-	float: none;
-	width: auto;
-	margin: 0;
-	flex: 1 1 auto;
-}
-
-.storefront-primary-navigation .site-header-cart,
-.woocommerce-active .site-header .site-header-cart {
-	float: none;
-	width: auto;
-	margin: 0;
-	flex: 0 0 auto;
-}
-
-.ebook-currency--nav {
-	padding: 0.5rem 0;
-}
-
-@media (max-width: 767px) {
-	/* Phones/tablets: switcher left, Menu button right; open menu uses full width. */
-	.storefront-primary-navigation > .col-full {
-		justify-content: space-between;
-		padding-bottom: 0.5rem;
-	}
-
-	.ebook-currency--nav {
-		order: -1;
-	}
-
-	.storefront-primary-navigation .main-navigation {
-		flex: 0 1 auto;
-		margin-left: auto;
-	}
-
-	.storefront-primary-navigation .main-navigation.toggled {
-		flex-basis: 100%;
-	}
-
-	.storefront-primary-navigation .main-navigation.toggled .menu-toggle {
-		float: right;
-	}
-
-	/* The cart is in the bottom bar on phones. */
-	.storefront-primary-navigation .site-header-cart {
-		display: none;
-	}
-
-	.site-header button.menu-toggle {
-		float: none;
-		position: relative; /* anchors Storefront's hamburger icon */
-		margin: 0;
-		min-height: var(--tap);
-		border: 2px solid var(--color-surface);
-		border-radius: var(--radius-small);
-		color: var(--color-surface);
-	}
 }
 
 /* Storefront underlines links inside page content with a very specific selector. */
