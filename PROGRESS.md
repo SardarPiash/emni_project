@@ -285,8 +285,8 @@ Working locally at `http://localhost:8080` (native Windows: PHP 8.3, MySQL 9.7, 
 | 8 | Impact analysis, research, design proposal | ✅ Complete (2026-10-03) — approved by user |
 | 9 | Design refresh and homepage layout | ✅ Complete (2026-10-03) |
 | 10 | Hero banner / carousel with admin | ✅ Complete (2026-10-03) |
-| 11 | Demo catalog (50) + homepage sections | ✅ Complete (2026-10-03) — waiting for "next" |
-| 12 | Regression test, polish, deploy notes | ⏳ |
+| 11 | Demo catalog (50) + homepage sections | ✅ Complete (2026-10-03) |
+| 12 | Regression test, polish, deploy notes | ✅ Complete (2026-10-03) — waiting for merge decision |
 
 ## Phase 8 — summary (2026-10-03)
 - Verdict: safe if the safeguards are kept. `ebook-dummy-gateway` untouched; checkout/currency/env/email/download logic in the mu-plugin unchanged; redesign = child theme; new admin features = new files in `mu-plugins/ebook-store-core/`.
@@ -357,3 +357,38 @@ Working locally at `http://localhost:8080` (native Windows: PHP 8.3, MySQL 9.7, 
 
 ### ⚠️ Before going live
 Demo sales counts (and the "Bestseller" badges/section they drive) are **fake**. Run `wp ebookstore remove-demo` (or get the client's written approval) before deploying, and never import this local database into the live site with demo data in it.
+
+## Phase 12 — Regression, performance, accessibility, deploy notes (2026-10-03)
+
+### Full regression (all passed)
+| Order | Currency | Payment | Result |
+|-------|----------|---------|--------|
+| #242 | USD | success | completed, PDF download 200, "ready to download" email (1 link) + admin email |
+| #243 | USD | fail | failed, 0 download permissions, "unsuccessful" email |
+| #244 | GBP (£5.30) | success | completed, "You will be charged in GBP" notice, download + email |
+| #245 | GBP | fail | failed, 0 downloads |
+- Checkout fields still first name, last name, email, country; `.env` settings and Gmail SMTP working; download limit 5 / expiry 30 days unchanged.
+- `ebook-dummy-gateway`: 0 lines changed against `main`. PHP error log empty. Browser console: no errors (only jQuery Migrate's info line, from WordPress).
+
+### Performance
+- Our own front-end files total about 72 KB uncompressed (CSS + JS, no libraries). The carousel CSS/JS load only on the home page.
+- **Fixed:** the WooCommerce product covers on the home page all loaded immediately. The new `inc/performance.php` makes covers lazy except the first row on shop/category/search pages. Result: home 1 eager image (hero slide) / 22 lazy; listings 4 eager; product page 1 eager (main cover), related eBooks lazy.
+
+### Accessibility
+- Static check script (lang, alt text, accessible names for links/buttons, form labels, duplicate ids, one h1, heading order) on home, shop, product, category, cart, checkout, my account and terms: all OK.
+- **Fixed:** checkout heading jump h1 → h3. A visually hidden h2 "Checkout steps" was added (`functions.php`).
+- Carousel: keyboard, visible pause button, reduced-motion support and `inert` hidden slides were already covered in Phase 10.
+
+### Responsive check (375 / 768 / 1024 / 1440)
+- **Fixed:** at 1024px product grids showed 3 cards with an orphan. They now show 4 per row from 1024px (`components.css`).
+- **Fixed:** at 768px the hero banner was too short for its text. It is taller on tablets now (`carousel.css`).
+- **Fixed:** at 768–1023px the two checkout columns were too narrow (the trust row wrapped word by word). They are stacked on tablets now (`main.css`).
+- Shop, product page and checkout at 375px, and home at 768/1024/1440, are correct.
+
+### Docs
+- `DEPLOY.md`: new section 13. It covers what to deploy, the Home Page admin for the owner, removing the demo data before launch (fake sales!), slide links fixed by the search-replace, `HERO_AUTOPLAY_SECONDS`, the ebookstore.tech note and rollback. Section 8.6 checklist and section 11 table updated.
+- `PLUGINS.md`: our own code list updated. No new third-party plugins or libraries.
+
+### Open decisions for the user
+- Merge `feature/ui-redesign` into `main`? (Not merged, not pushed.)
+- Replace the current ebookstore.tech build with this project? (Not touched.)

@@ -762,3 +762,12 @@ ul.products li.product .ebook-badge {
 	outline: none;
 	box-shadow: none;
 }
+
+/* Desktop from 1024px: 4 per row (sections show 4 items without an orphan). */
+@media (min-width: 1024px) {
+	ul.products,
+	.site-main ul.products {
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: var(--space-5);
+	}
+}

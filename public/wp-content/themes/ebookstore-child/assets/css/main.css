@@ -1934,3 +1934,18 @@ p.woocommerce-thankyou-order-received {
 	margin: 0 0 2rem;
 	text-align: center;
 }
+
+/* Tablets (768–1023px): Storefront's two checkout columns are too narrow, so stack them. */
+@media (min-width: 768px) and (max-width: 1023px) {
+	.woocommerce-checkout .col2-set,
+	.woocommerce-checkout #order_review_heading,
+	.woocommerce-checkout #order_review {
+		float: none;
+		width: 100%;
+		margin-right: 0;
+	}
+
+	.woocommerce-checkout #customer_details {
+		margin-bottom: 2rem;
+	}
+}

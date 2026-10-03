@@ -256,3 +256,10 @@
 		transition: none;
 	}
 }
+
+/* Tablets: a taller banner so text and controls have room. */
+@media (min-width: 768px) and (max-width: 1023px) {
+	.ebook-carousel__viewport {
+		aspect-ratio: 16 / 8;
+	}
+}

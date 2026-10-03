@@ -67,6 +67,7 @@ require_once __DIR__ . '/inc/trust.php';
 require_once __DIR__ . '/inc/badges.php';
 require_once __DIR__ . '/inc/hero.php';
 require_once __DIR__ . '/inc/sections.php';
+require_once __DIR__ . '/inc/performance.php';
 
 /* -------------------------------------------------------------------------
  * Assets: self-hosted fonts, main stylesheet, no Google Fonts / Customizer CSS
@@ -542,3 +543,15 @@ function ebookstore_child_sort_label() {
 	}
 	echo '<span class="ebook-sort-label" aria-hidden="true">' . esc_html__( 'Sort by', 'ebookstore-child' ) . '</span>';
 }
+
+/**
+ * Accessibility: WooCommerce's checkout jumps from the page title (h1) to
+ * "Your details" (h3). A visually hidden h2 keeps the heading levels in order
+ * without overriding WooCommerce templates.
+ */
+add_action(
+	'woocommerce_checkout_before_customer_details',
+	static function () {
+		echo '<h2 class="screen-reader-text">' . esc_html__( 'Checkout steps', 'ebookstore-child' ) . '</h2>';
+	}
+);

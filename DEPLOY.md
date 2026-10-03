@@ -42,7 +42,8 @@ Our setup keeps secrets **one level above** the public web folder, so they can n
 `wp-config.php` loads `../config/env-loader.php` and `../.env` from the folder **above** `public_html` —
 if your path is different, that is fine as long as `.env` and `config/` sit next to `public_html`.
 
-**Never upload:** `.git`, `sample-content/`, `backups/`, `logs/`, `bin/`, `PROGRESS.md`, `ebook_prompt.md`.
+**Never upload:** `.git`, `sample-content/`, `backups/`, `logs/`, `bin/`, `PROGRESS.md`, `ebook_prompt.md`,
+`ui_redesign_prompt.md`.
 
 ---
 
@@ -221,8 +222,10 @@ quiet shop you can add a real cron job: hPanel → Advanced → **Cron Jobs**, e
 
 ### 8.6 Before you take real orders
 - [ ] Replace the **sample** Privacy Policy and Terms & Conditions text (Pages → edit).
-- [ ] Replace or delete the **6 sample eBooks** and add your real ones (Products → Add New: tick
-      *Virtual* + *Downloadable*, upload the PDF under *Downloadable files*, set *Sold individually*).
+- [ ] **Remove the demo catalogue** (50 demo eBooks with **fake sales counts**) — see section 13.3 — and add
+      your real eBooks (Products → Add New: tick *Virtual* + *Downloadable*, upload the PDF under
+      *Downloadable files*, set *Sold individually*; tick ★ *Featured* for Editor's Picks).
+- [ ] Replace the 3 starter **Hero Slides** with your own (section 13.2) — or keep them (licence: `IMAGE_CREDITS.md`).
 - [ ] Delete test orders (WooCommerce → Orders) and the test customer (Users).
 - [ ] **Taxes:** UK VAT / US sales tax on digital goods may apply — decide with an accountant
       (WooCommerce → Settings → General → *Enable taxes*).
@@ -276,7 +279,7 @@ Only upload **our own code** — never the database:
 | Changed locally | Upload to (on Hostinger) |
 |-----------------|--------------------------|
 | `public/wp-content/themes/ebookstore-child/` | `public_html/wp-content/themes/ebookstore-child/` |
-| `public/wp-content/mu-plugins/ebook-store-core.php` and `ebook-store-core/` | `public_html/wp-content/mu-plugins/` |
+| `public/wp-content/mu-plugins/ebook-store-core.php` and the whole `ebook-store-core/` folder (incl. `assets/`) | `public_html/wp-content/mu-plugins/` |
 | `public/wp-content/plugins/ebook-dummy-gateway/` | (only while still in use) |
 | `config/env-loader.php` | `config/` (one level above `public_html`) |
 | new `.env` keys (see `.env.example`) | add them to the live `.env` by hand |
@@ -312,3 +315,70 @@ plugins listed in `PLUGINS.md`. Then either
 
 Start the site (two PowerShell windows): `mysqld --console` and
 `wp server --host=localhost --port=8080 --docroot=public`.
+
+---
+
+## 13. The UI redesign (Hero Slides, home page sections, demo catalogue)
+
+The redesign (branch `feature/ui-redesign`, Phases 8–12 in `PROGRESS.md`) is **code in the child theme and
+the mu-plugin only**: no new third-party plugins and no new database tables. Payment, currency,
+`.env`/SMTP and downloads are unchanged.
+
+### 13.1 What to deploy
+
+| Item | How it gets to the live site |
+|------|------------------------------|
+| `themes/ebookstore-child/` (new `inc/`, `template-parts/`, `woocommerce/`, `assets/css/`, `assets/js/`) | upload (section 11) |
+| `mu-plugins/ebook-store-core.php` + `ebook-store-core/` (`hero-slides.php`, `homepage-sections.php`, `demo-data.php`, `exchange-rate.php`, `assets/`) | upload (section 11) |
+| Hero Slides, slideshow and section settings | stored in the **database** (first launch: they come with the DB import) |
+| Slide images | `wp-content/uploads/` (first launch: they come with the uploads in the zip) |
+| New `.env` key **`HERO_AUTOPLAY_SECONDS`** (default `6`) | add it to the live `.env`. It is optional, and the admin setting overrides it |
+
+- **First launch (sections 3–6):** everything arrives with the zip and the DB import. The search-replace in
+  section 6 also fixes the **slide button links**, which are stored as full URLs
+  (`http://localhost:8080/shop/` → `https://yourstore.com/shop/`). Afterwards, click each slide button once to check it.
+- **Site already live (code update only):** upload the two folders above. The live database has no slides
+  yet, so the home page shows the built-in default hero until slides are added in the admin (13.2). Or run
+  `wp ebookstore seed-slides` over SSH: this needs the `sample-content/hero/` folder uploaded temporarily, then
+  delete it. Home page sections work immediately with default settings.
+
+### 13.2 How the shop owner manages the home page (wp-admin → **Home Page**)
+
+| Menu | What it does |
+|------|--------------|
+| **Hero Slides** | list of banner slides: image, heading, order, shown/hidden |
+| **Add New Slide** | desktop image (1600×600, required), optional phone image (800×1000), heading, subheading, button text + link (`/shop/`, `#ebooks` or a full `https://` link), *Show this slide on the website*; display order is set in the *Order* box |
+| **Slideshow Settings** | seconds per slide (0 = no automatic change; empty = `.env` value) |
+| **Sections** | show/hide, title and number of items for Bestsellers, Editor's Picks, Browse by Category, New Arrivals and the promo strip |
+
+- With 0 slides shown you get the default hero, with 1 a static banner, and with 2 or more a carousel (arrows, dots, swipe, pause button).
+- Use only photos you are allowed to use commercially, and record the source in `IMAGE_CREDITS.md`.
+  Avoid people, brands and readable real book titles.
+- **Bestsellers** and the *Bestseller* badge use WooCommerce's real sales counts. *New* means published less than 30 days ago.
+
+### 13.3 Remove the demo data before going live
+
+The local database contains **50 demo eBooks** (`wp ebookstore seed-demo`) with **made-up sales counts**,
+and those counts drive the Bestsellers section and badges. Showing them to real customers would be misleading.
+Before the first launch, take a backup (`.\bin\export-db.ps1`), then run this on the **local** site:
+
+```powershell
+wp ebookstore remove-demo              # shows what will be deleted and asks to confirm
+```
+
+It deletes only demo-tagged eBooks, their covers, demo PDFs and empty demo categories. It never deletes orders.
+By default it keeps any demo eBook that appears in an order; `--include-ordered` deletes those as well,
+so delete the test orders first (section 8.6). Then add the real eBooks and export the database (3a).
+Do **not** run `seed-demo` on the live site (it refuses when `APP_ENV=production`).
+
+### 13.4 The current domain ebookstore.tech
+
+`ebookstore.tech` currently runs a **different build** (another theme + Elementor, no currency switcher).
+None of this project is on it. Replacing it is a first launch (sections 3–9) and **overwrites that site**,
+so take a full Hostinger backup first, and only do it after the owner has confirmed.
+
+### 13.5 Rolling back the redesign
+
+- **Local:** run `git checkout main`, then import `backups/before-ui-redesign.sql`
+  (`mysql -u root ebookstore < backups\before-ui-redesign.sql`).
+- **Live site:** re-upload the previous theme and mu-plugin folders. The extra database rows (slides, settings) are harmless.
