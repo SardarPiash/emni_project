@@ -329,7 +329,7 @@ the mu-plugin only**: no new third-party plugins and no new database tables. Pay
 | Item | How it gets to the live site |
 |------|------------------------------|
 | `themes/ebookstore-child/` (new `inc/`, `template-parts/`, `woocommerce/`, `assets/css/`, `assets/js/`) | upload (section 11) |
-| `mu-plugins/ebook-store-core.php` + `ebook-store-core/` (`hero-slides.php`, `homepage-sections.php`, `demo-data.php`, `exchange-rate.php`, `assets/`) | upload (section 11) |
+| `mu-plugins/ebook-store-core.php` + `ebook-store-core/` (`hero-slides.php`, `homepage-sections.php`, `promo-banners.php`, `demo-data.php`, `exchange-rate.php`, `assets/`) | upload (section 11) |
 | Hero Slides, slideshow and section settings | stored in the **database** (first launch: they come with the DB import) |
 | Slide images | `wp-content/uploads/` (first launch: they come with the uploads in the zip) |
 | New `.env` key **`HERO_AUTOPLAY_SECONDS`** (default `6`) | add it to the live `.env`. It is optional, and the admin setting overrides it |
@@ -347,11 +347,12 @@ the mu-plugin only**: no new third-party plugins and no new database tables. Pay
 | Menu | What it does |
 |------|--------------|
 | **Hero Slides** | list of banner slides: image, heading, order, shown/hidden |
-| **Add New Slide** | desktop image (1600×600, required), optional phone image (800×1000), heading, subheading, button text + link (`/shop/`, `#ebooks` or a full `https://` link), *Show this slide on the website*; display order is set in the *Order* box |
+| **Add New Slide** | desktop image (1600×900, required), optional phone image (800×1000), heading, subheading, button text + link (`/shop/`, `#ebooks` or a full `https://` link), *Show this slide on the website*; display order is set in the *Order* box |
 | **Slideshow Settings** | seconds per slide (0 = no automatic change; empty = `.env` value) |
-| **Sections** | show/hide, title and number of items for Bestsellers, Editor's Picks, Browse by Category, New Arrivals and the promo strip |
+| **Side Banners** | the 2 promotion banners next to the slideshow: label, title, text, button, link, colour, and 2 book covers from a list **or** your own image (about 800×500) |
+| **Sections** | show/hide, title and number of items for Bestsellers, Editor's Picks, Browse by Category, New Arrivals and the promo strip; for **Browse by Category** tick the categories and number them 1, 2, 3 … (none ticked = automatic). The card picture = Products → Categories → *Thumbnail*, otherwise the newest cover |
 
-- With 0 slides shown you get the default hero, with 1 a static banner, and with 2 or more a carousel (arrows, dots, swipe, pause button).
+- With 0 slides shown you get the default hero, with 1 a static banner, and with 2 or more a carousel (arrows, dots, swipe). Autoplay pauses on hover; set it to 0 for no automatic change.
 - Use only photos you are allowed to use commercially, and record the source in `IMAGE_CREDITS.md`.
   Avoid people, brands and readable real book titles.
 - **Bestsellers** and the *Bestseller* badge use WooCommerce's real sales counts. *New* means published less than 30 days ago.

@@ -67,6 +67,7 @@ require_once __DIR__ . '/inc/trust.php';
 require_once __DIR__ . '/inc/badges.php';
 require_once __DIR__ . '/inc/hero.php';
 require_once __DIR__ . '/inc/sections.php';
+require_once __DIR__ . '/inc/shop.php';
 require_once __DIR__ . '/inc/performance.php';
 
 /* -------------------------------------------------------------------------

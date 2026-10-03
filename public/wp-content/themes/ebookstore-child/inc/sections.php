@@ -1,7 +1,6 @@
 <?php
 /**
- * Home page sections (settings from the mu-plugin: Home Page → Sections)
- * and the category filter in the shop toolbar.
+ * Home page sections (settings from the mu-plugin: Home Page → Sections).
  *
  * @package EbookStoreChild
  */
@@ -76,6 +75,7 @@ function ebookstore_child_home_sections() {
 						'id'    => $id,
 						'title' => $section['title'],
 						'count' => (int) $section['count'],
+						'terms' => isset( $section['terms'] ) ? (array) $section['terms'] : array(),
 					)
 				);
 				break;
@@ -100,53 +100,3 @@ function ebookstore_child_home_sections() {
 	}
 	return $printed;
 }
-
-/* -------------------------------------------------------------------------
- * Shop toolbar: category filter
- * ---------------------------------------------------------------------- */
-
-/**
- * Category dropdown next to the sorting dropdown (shop and category pages).
- * Works without JavaScript via the "Go" button; with JS it navigates on change.
- */
-function ebookstore_child_category_filter() {
-	if ( ! woocommerce_products_will_display() ) {
-		return;
-	}
-	$terms = get_terms(
-		array(
-			'taxonomy'   => 'product_cat',
-			'hide_empty' => true,
-			'exclude'    => array( (int) get_option( 'default_product_cat' ) ),
-			'orderby'    => 'name',
-		)
-	);
-	if ( is_wp_error( $terms ) || count( $terms ) < 2 ) {
-		return;
-	}
-	$current = is_product_category() ? get_queried_object_id() : 0;
-	$shop    = wc_get_page_permalink( 'shop' );
-	?>
-	<form class="ebook-catfilter" action="<?php echo esc_url( $shop ); ?>" method="get">
-		<label class="ebook-sort-label" for="ebook-catfilter-select"><?php esc_html_e( 'Category', 'ebookstore-child' ); ?></label>
-		<select id="ebook-catfilter-select" name="product_cat" class="ebook-catfilter__select" data-ebook-navigate>
-			<option value="" data-url="<?php echo esc_url( $shop ); ?>"><?php esc_html_e( 'All categories', 'ebookstore-child' ); ?></option>
-			<?php foreach ( $terms as $term ) : ?>
-				<option value="<?php echo esc_attr( $term->slug ); ?>" data-url="<?php echo esc_url( get_term_link( $term ) ); ?>" <?php selected( $current, $term->term_id ); ?>>
-					<?php echo esc_html( sprintf( '%s (%d)', $term->name, $term->count ) ); ?>
-				</option>
-			<?php endforeach; ?>
-		</select>
-		<noscript><button type="submit" class="button"><?php esc_html_e( 'Go', 'ebookstore-child' ); ?></button></noscript>
-	</form>
-	<?php
-}
-// Registered on "init" (priority 9) so it runs inside Storefront's toolbar wrapper
-// (priority 9, registered earlier) and before the "Sort by" label (added on init 10).
-add_action(
-	'init',
-	static function () {
-		add_action( 'woocommerce_before_shop_loop', 'ebookstore_child_category_filter', 9 );
-	},
-	9
-);

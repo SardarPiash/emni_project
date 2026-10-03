@@ -213,7 +213,7 @@ function ebookstore_render_slide_box( $post ) {
 	<div class="ebookstore-slide-box">
 		<div class="ebookstore-slide-box__images">
 			<?php
-			ebookstore_slide_image_field( '_slide_image_desktop', (int) $v['_slide_image_desktop'], __( 'Desktop image (required)', 'ebook-store' ), __( 'Wide landscape picture, ideally 1600 × 600 pixels. Text appears on the left, so keep the important part of the picture on the right.', 'ebook-store' ) );
+			ebookstore_slide_image_field( '_slide_image_desktop', (int) $v['_slide_image_desktop'], __( 'Desktop image (required)', 'ebook-store' ), __( 'Landscape picture, ideally 1600 × 900 pixels (at least 1200 × 700). The edges may be cropped and text appears on the left, so keep the important part in the centre-right.', 'ebook-store' ) );
 			ebookstore_slide_image_field( '_slide_image_mobile', (int) $v['_slide_image_mobile'], __( 'Mobile image (optional)', 'ebook-store' ), __( 'Tall picture for phones, ideally 800 × 1000 pixels. If empty, the desktop image is used.', 'ebook-store' ) );
 			?>
 		</div>

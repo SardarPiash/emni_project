@@ -35,7 +35,7 @@ from `C:\projects\ebook-store` in PowerShell (`wp-cli.yml` points WP-CLI to `pub
 
 | Path | Type |
 |------|------|
-| `public/wp-content/mu-plugins/ebook-store-core.php` + `ebook-store-core/` (`exchange-rate.php`, `hero-slides.php`, `homepage-sections.php`, `demo-data.php`, `assets/hero-slides-admin.js`) | must-use plugin |
+| `public/wp-content/mu-plugins/ebook-store-core.php` + `ebook-store-core/` (`exchange-rate.php`, `hero-slides.php`, `homepage-sections.php`, `promo-banners.php`, `demo-data.php`, `assets/hero-slides-admin.js`) | must-use plugin |
 | `public/wp-content/themes/ebookstore-child/` | child theme (active) — the UI redesign (hero carousel, sections, badges, icons) is plain PHP/CSS/vanilla JS: **no front-end libraries** (no slider, no animation, no icon font) |
 | `public/wp-content/plugins/ebook-dummy-gateway/` | test-only gateway — active while `DUMMY_GATEWAY_ENABLED=true`; see its README.md to remove |
 

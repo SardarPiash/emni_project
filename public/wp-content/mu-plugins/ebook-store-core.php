@@ -174,6 +174,7 @@ add_action( 'init', 'ebookstore_disable_emoji' );
 require_once __DIR__ . '/ebook-store-core/exchange-rate.php';
 require_once __DIR__ . '/ebook-store-core/hero-slides.php';
 require_once __DIR__ . '/ebook-store-core/homepage-sections.php';
+require_once __DIR__ . '/ebook-store-core/promo-banners.php';
 require_once __DIR__ . '/ebook-store-core/demo-data.php';
 
 /**

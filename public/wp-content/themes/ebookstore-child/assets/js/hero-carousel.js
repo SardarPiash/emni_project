@@ -2,9 +2,9 @@
  * eBook Store — hero carousel (vanilla JS, no library).
  *
  * Arrows, dots, keyboard (Left/Right when focus is inside), swipe on touch
- * screens, autoplay with a visible pause button, pause on hover/focus and
- * when the tab is hidden. No autoplay for visitors who prefer reduced motion.
- * Follows the WAI-ARIA carousel pattern.
+ * screens, autoplay that pauses on hover/focus and when the tab is hidden.
+ * No autoplay for visitors who prefer reduced motion (the admin can also set
+ * it to 0). Follows the WAI-ARIA carousel pattern.
  */
 ( function () {
 	'use strict';
@@ -18,7 +18,6 @@
 	var dots = Array.prototype.slice.call( root.querySelectorAll( '.ebook-carousel__dot' ) );
 	var prev = root.querySelector( '.ebook-carousel__arrow--prev' );
 	var next = root.querySelector( '.ebook-carousel__arrow--next' );
-	var pauseBtn = root.querySelector( '.ebook-carousel__pause' );
 	var status = root.querySelector( '.ebook-carousel__status' );
 	var viewport = root.querySelector( '.ebook-carousel__viewport' );
 
@@ -28,7 +27,6 @@
 
 	var current = 0;
 	var timer = null;
-	var userPaused = false;
 	var hovering = false;
 	var focusInside = false;
 
@@ -71,24 +69,11 @@
 
 	function start() {
 		stop();
-		if ( canAutoplay && ! userPaused && ! hovering && ! focusInside && ! document.hidden ) {
+		if ( canAutoplay && ! hovering && ! focusInside && ! document.hidden ) {
 			timer = window.setInterval( function () {
 				goTo( current + 1, false );
 			}, seconds * 1000 );
 		}
-	}
-
-	function setPaused( paused ) {
-		userPaused = paused;
-		if ( pauseBtn ) {
-			pauseBtn.classList.toggle( 'is-paused', paused );
-			pauseBtn.setAttribute( 'aria-label', pauseBtn.getAttribute( paused ? 'data-label-play' : 'data-label-pause' ) );
-		}
-		// While moving automatically, do not announce every change.
-		if ( status ) {
-			status.setAttribute( 'aria-live', paused || ! canAutoplay ? 'polite' : 'off' );
-		}
-		start();
 	}
 
 	/* Controls */
@@ -107,15 +92,6 @@
 		} );
 	} );
 
-	if ( pauseBtn ) {
-		if ( canAutoplay ) {
-			pauseBtn.hidden = false;
-			pauseBtn.addEventListener( 'click', function () {
-				setPaused( ! userPaused );
-			} );
-		}
-	}
-
 	/* Keyboard: Left / Right while focus is inside the carousel */
 	root.addEventListener( 'keydown', function ( event ) {
 		if ( 'ArrowLeft' === event.key ) {
@@ -129,7 +105,7 @@
 		}
 	} );
 
-	/* Pause while hovered or focused; resume afterwards (unless paused by the button) */
+	/* Pause while hovered or focused; resume afterwards */
 	root.addEventListener( 'mouseenter', function () {
 		hovering = true;
 		stop();
@@ -182,5 +158,5 @@
 		startX = startY = null;
 	} );
 
-	setPaused( false );
+	start();
 } )();

@@ -35,10 +35,11 @@ function ebookstore_home_section_defaults() {
 		),
 		'categories'  => array(
 			'label'   => __( 'Browse by Category', 'ebook-store' ),
-			'help'    => __( 'Category cards with the newest cover of each category.', 'ebook-store' ),
+			'help'    => __( 'Category cards. Choose the categories and their order below, or leave all unticked to show the biggest categories automatically.', 'ebook-store' ),
 			'enabled' => '1',
 			'title'   => __( 'Browse by Category', 'ebook-store' ),
 			'count'   => 8,
+			'terms'   => array(),
 		),
 		'new'         => array(
 			'label'   => __( 'New Arrivals', 'ebook-store' ),
@@ -130,6 +131,9 @@ function ebookstore_render_sections_page() {
 							</td>
 							<td>
 								<input type="text" class="regular-text" maxlength="80" aria-label="<?php echo esc_attr( $s['label'] . ' — ' . __( 'title', 'ebook-store' ) ); ?>" name="sections[<?php echo esc_attr( $key ); ?>][title]" value="<?php echo esc_attr( $s['title'] ); ?>">
+								<?php if ( 'categories' === $key ) : ?>
+									<?php ebookstore_render_section_terms( (array) $s['terms'] ); ?>
+								<?php endif; ?>
 								<?php if ( 'promo' === $key ) : ?>
 									<br><textarea class="large-text" rows="2" maxlength="200" aria-label="<?php esc_attr_e( 'Promotional strip — text', 'ebook-store' ); ?>" name="sections[promo][text]"><?php echo esc_textarea( $s['text'] ); ?></textarea>
 									<br><input type="text" class="regular-text" maxlength="30" aria-label="<?php esc_attr_e( 'Promotional strip — button text', 'ebook-store' ); ?>" name="sections[promo][button]" value="<?php echo esc_attr( $s['button'] ); ?>">
@@ -177,6 +181,9 @@ add_action(
 				$count                  = (int) ( $row['count'] ?? $defaults['count'] );
 				$clean[ $key ]['count'] = in_array( $count, array( 4, 8, 12 ), true ) ? $count : $defaults['count'];
 			}
+			if ( 'categories' === $key ) {
+				$clean[ $key ]['terms'] = ebookstore_clean_section_terms( $row );
+			}
 			if ( 'promo' === $key ) {
 				$clean[ $key ]['text']   = mb_substr( sanitize_textarea_field( $row['text'] ?? '' ), 0, 200 );
 				$clean[ $key ]['button'] = mb_substr( sanitize_text_field( $row['button'] ?? '' ), 0, 30 ) ?: $defaults['button'];
@@ -187,6 +194,75 @@ add_action(
 		exit;
 	}
 );
+
+/* -------------------------------------------------------------------------
+ * "Browse by Category": chosen categories and their order
+ * ---------------------------------------------------------------------- */
+
+/**
+ * Category picker inside the Sections table (tick + order number per category).
+ *
+ * @param int[] $chosen Chosen term IDs in display order.
+ */
+function ebookstore_render_section_terms( array $chosen ) {
+	$terms = get_terms(
+		array(
+			'taxonomy'   => 'product_cat',
+			'hide_empty' => false,
+			'exclude'    => array( (int) get_option( 'default_product_cat' ) ),
+			'orderby'    => 'name',
+		)
+	);
+	if ( is_wp_error( $terms ) || ! $terms ) {
+		return;
+	}
+	$chosen = array_values( array_map( 'intval', $chosen ) );
+	?>
+	<fieldset style="margin-top:10px">
+		<legend><strong><?php esc_html_e( 'Categories to show', 'ebook-store' ); ?></strong> <span class="description"><?php esc_html_e( '(tick and number them 1, 2, 3 … — none ticked = automatic)', 'ebook-store' ); ?></span></legend>
+		<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:4px 16px;margin-top:6px">
+			<?php foreach ( $terms as $term ) : ?>
+				<?php
+				$pos = array_search( (int) $term->term_id, $chosen, true );
+				$cb  = 'ebookstore-cat-' . $term->term_id;
+				?>
+				<span>
+					<input type="checkbox" id="<?php echo esc_attr( $cb ); ?>" name="sections[categories][terms][]" value="<?php echo esc_attr( (string) $term->term_id ); ?>" <?php checked( false !== $pos ); ?>>
+					<input type="number" min="1" max="99" style="width:56px" name="sections[categories][order][<?php echo esc_attr( (string) $term->term_id ); ?>]" value="<?php echo esc_attr( false !== $pos ? (string) ( $pos + 1 ) : '' ); ?>" aria-label="<?php echo esc_attr( sprintf( /* translators: %s: category name */ __( 'Position of %s', 'ebook-store' ), $term->name ) ); ?>">
+					<label for="<?php echo esc_attr( $cb ); ?>"><?php echo esc_html( sprintf( '%s (%d)', $term->name, $term->count ) ); ?></label>
+				</span>
+			<?php endforeach; ?>
+		</div>
+		<p class="description"><?php esc_html_e( 'The card picture is the category image (Products → Categories → edit → Thumbnail). Without one, the newest eBook cover of the category is used. Empty categories are not shown.', 'ebook-store' ); ?></p>
+	</fieldset>
+	<?php
+}
+
+/**
+ * Chosen category IDs from the form, sorted by their order number.
+ *
+ * @param array $row Posted "categories" row.
+ * @return int[]
+ */
+function ebookstore_clean_section_terms( array $row ) {
+	$ids   = isset( $row['terms'] ) && is_array( $row['terms'] ) ? array_unique( array_map( 'absint', $row['terms'] ) ) : array();
+	$order = isset( $row['order'] ) && is_array( $row['order'] ) ? $row['order'] : array();
+	$list  = array();
+	foreach ( $ids as $id ) {
+		$term = $id ? get_term( $id, 'product_cat' ) : null;
+		if ( $term && ! is_wp_error( $term ) ) {
+			$pos    = isset( $order[ $id ] ) && '' !== $order[ $id ] ? absint( $order[ $id ] ) : 999;
+			$list[] = array( $pos, $term->name, $id );
+		}
+	}
+	usort(
+		$list,
+		static function ( $a, $b ) {
+			return array( $a[0], $a[1] ) <=> array( $b[0], $b[1] );
+		}
+	);
+	return array_slice( array_column( $list, 2 ), 0, 24 );
+}
 
 /* -------------------------------------------------------------------------
  * "Editor's Picks" list in the shop (?ebook_list=featured)

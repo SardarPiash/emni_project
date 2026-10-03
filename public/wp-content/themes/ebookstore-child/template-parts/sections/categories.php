@@ -1,24 +1,35 @@
 <?php
 /**
- * Home section: "Browse by Category" cards (name, number of eBooks and the
- * newest cover of the category).
+ * Home section: "Browse by Category" cards (name, number of eBooks and a
+ * picture: the category image if set, otherwise the newest cover).
+ *
+ * Categories: the ones chosen in WP admin → Home Page → Sections (in that
+ * order); none chosen = the biggest categories, up to "count".
  *
  * @package EbookStoreChild
  *
- * @var array $args { id, title, count }
+ * @var array $args { id, title, count, terms }
  */
 
 defined( 'ABSPATH' ) || exit;
 
-$ebookstore_terms = get_terms(
-	array(
-		'taxonomy'   => 'product_cat',
-		'hide_empty' => true,
-		'exclude'    => array( (int) get_option( 'default_product_cat' ) ),
-		'orderby'    => 'count',
-		'order'      => 'DESC',
-		'number'     => (int) $args['count'],
-	)
+$ebookstore_chosen = array_filter( array_map( 'absint', (array) ( $args['terms'] ?? array() ) ) );
+$ebookstore_terms  = get_terms(
+	$ebookstore_chosen
+		? array(
+			'taxonomy'   => 'product_cat',
+			'hide_empty' => true,
+			'include'    => $ebookstore_chosen,
+			'orderby'    => 'include',
+		)
+		: array(
+			'taxonomy'   => 'product_cat',
+			'hide_empty' => true,
+			'exclude'    => array( (int) get_option( 'default_product_cat' ) ),
+			'orderby'    => 'count',
+			'order'      => 'DESC',
+			'number'     => (int) $args['count'],
+		)
 );
 if ( is_wp_error( $ebookstore_terms ) || ! $ebookstore_terms ) {
 	return;
@@ -36,16 +47,19 @@ $ebookstore_shop = wc_get_page_permalink( 'shop' );
 	<ul class="ebook-cats">
 		<?php foreach ( $ebookstore_terms as $ebookstore_term ) : ?>
 			<?php
-			$ebookstore_latest = wc_get_products(
-				array(
-					'status'   => 'publish',
-					'limit'    => 1,
-					'orderby'  => 'date',
-					'order'    => 'DESC',
-					'category' => array( $ebookstore_term->slug ),
-				)
-			);
-			$ebookstore_image  = $ebookstore_latest ? $ebookstore_latest[0]->get_image_id() : 0;
+			$ebookstore_image = (int) get_term_meta( $ebookstore_term->term_id, 'thumbnail_id', true );
+			if ( ! $ebookstore_image || ! wp_attachment_is_image( $ebookstore_image ) ) {
+				$ebookstore_latest = wc_get_products(
+					array(
+						'status'   => 'publish',
+						'limit'    => 1,
+						'orderby'  => 'date',
+						'order'    => 'DESC',
+						'category' => array( $ebookstore_term->slug ),
+					)
+				);
+				$ebookstore_image  = $ebookstore_latest ? (int) $ebookstore_latest[0]->get_image_id() : 0;
+			}
 			?>
 			<li class="ebook-cats__item">
 				<a class="ebook-cats__link" href="<?php echo esc_url( get_term_link( $ebookstore_term ) ); ?>">

@@ -1,8 +1,9 @@
 <?php
 /**
  * Home page hero carousel (Hero Slides from the mu-plugin).
- * One slide = static banner; two or more = carousel with arrows, dots,
- * swipe, keyboard and a pause button (assets/js/hero-carousel.js).
+ * One slide = static banner; two or more = carousel with side arrows, dots,
+ * swipe and keyboard (assets/js/hero-carousel.js). Autoplay pauses while the
+ * pointer or keyboard focus is on it.
  *
  * @package EbookStoreChild
  *
@@ -77,29 +78,20 @@ $ebookstore_multi = $ebookstore_count > 1;
 	</div>
 
 	<?php if ( $ebookstore_multi ) : ?>
-		<div class="ebook-carousel__controls">
-			<button type="button" class="ebook-carousel__arrow ebook-carousel__arrow--prev" aria-controls="ebook-carousel-slides" aria-label="<?php esc_attr_e( 'Previous slide', 'ebookstore-child' ); ?>">
-				<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-			</button>
-			<div class="ebook-carousel__dots">
-				<?php for ( $ebookstore_d = 1; $ebookstore_d <= $ebookstore_count; $ebookstore_d++ ) : ?>
-					<button type="button" class="ebook-carousel__dot"
-						aria-controls="<?php echo esc_attr( 'ebook-slide-' . $ebookstore_d ); ?>"
-						aria-label="<?php echo esc_attr( sprintf( /* translators: %d: slide number */ __( 'Go to slide %d', 'ebookstore-child' ), $ebookstore_d ) ); ?>"
-						<?php echo 1 === $ebookstore_d ? 'aria-current="true"' : ''; ?>
-						data-slide="<?php echo esc_attr( (string) ( $ebookstore_d - 1 ) ); ?>"></button>
-				<?php endfor; ?>
-			</div>
-			<button type="button" class="ebook-carousel__arrow ebook-carousel__arrow--next" aria-controls="ebook-carousel-slides" aria-label="<?php esc_attr_e( 'Next slide', 'ebookstore-child' ); ?>">
-				<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-			</button>
-			<button type="button" class="ebook-carousel__pause" hidden
-				data-label-pause="<?php esc_attr_e( 'Pause slideshow', 'ebookstore-child' ); ?>"
-				data-label-play="<?php esc_attr_e( 'Play slideshow', 'ebookstore-child' ); ?>"
-				aria-label="<?php esc_attr_e( 'Pause slideshow', 'ebookstore-child' ); ?>">
-				<svg class="ebook-carousel__icon-pause" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 5h3v14H7zM14 5h3v14h-3z" fill="currentColor"/></svg>
-				<svg class="ebook-carousel__icon-play" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
-			</button>
+		<button type="button" class="ebook-carousel__arrow ebook-carousel__arrow--prev" aria-controls="ebook-carousel-slides" aria-label="<?php esc_attr_e( 'Previous slide', 'ebookstore-child' ); ?>">
+			<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+		</button>
+		<button type="button" class="ebook-carousel__arrow ebook-carousel__arrow--next" aria-controls="ebook-carousel-slides" aria-label="<?php esc_attr_e( 'Next slide', 'ebookstore-child' ); ?>">
+			<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+		</button>
+		<div class="ebook-carousel__dots">
+			<?php for ( $ebookstore_d = 1; $ebookstore_d <= $ebookstore_count; $ebookstore_d++ ) : ?>
+				<button type="button" class="ebook-carousel__dot"
+					aria-controls="<?php echo esc_attr( 'ebook-slide-' . $ebookstore_d ); ?>"
+					aria-label="<?php echo esc_attr( sprintf( /* translators: %d: slide number */ __( 'Go to slide %d', 'ebookstore-child' ), $ebookstore_d ) ); ?>"
+					<?php echo 1 === $ebookstore_d ? 'aria-current="true"' : ''; ?>
+					data-slide="<?php echo esc_attr( (string) ( $ebookstore_d - 1 ) ); ?>"></button>
+			<?php endfor; ?>
 		</div>
 		<p class="screen-reader-text ebook-carousel__status" aria-live="polite" aria-atomic="true"></p>
 	<?php endif; ?>

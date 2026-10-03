@@ -43,16 +43,12 @@
 		}
 	}
 
-	/* ---------- Shop category filter: go to the category page on change ---------- */
-	var navSelects = document.querySelectorAll( 'select[data-ebook-navigate]' );
-	for ( var n = 0; n < navSelects.length; n++ ) {
-		navSelects[ n ].addEventListener( 'change', function () {
-			var option = this.options[ this.selectedIndex ];
-			var url = option && option.getAttribute( 'data-url' );
-			if ( url ) {
-				window.location.href = url;
-			}
-		} );
+	/* ---------- Shop: keep the selected category chip visible on phones ---------- */
+	var chips = document.querySelector( '.ebook-shop__cats' );
+	var currentChip = chips && chips.querySelector( '.is-current' );
+	if ( currentChip && chips.scrollWidth > chips.clientWidth ) {
+		var item = currentChip.parentNode;
+		chips.scrollLeft = Math.max( 0, item.offsetLeft - chips.offsetLeft - 16 );
 	}
 
 	/* ---------- 2. "Added to cart" feedback ---------- */

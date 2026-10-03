@@ -286,7 +286,8 @@ Working locally at `http://localhost:8080` (native Windows: PHP 8.3, MySQL 9.7, 
 | 9 | Design refresh and homepage layout | ✅ Complete (2026-10-03) |
 | 10 | Hero banner / carousel with admin | ✅ Complete (2026-10-03) |
 | 11 | Demo catalog (50) + homepage sections | ✅ Complete (2026-10-03) |
-| 12 | Regression test, polish, deploy notes | ✅ Complete (2026-10-03) — waiting for merge decision |
+| 12 | Regression test, polish, deploy notes | ✅ Complete (2026-10-03) |
+| 13 | User feedback: side banners, carousel controls, shop page, category control | ✅ Complete (2026-10-03) — waiting for review / merge decision |
 
 ## Phase 8 — summary (2026-10-03)
 - Verdict: safe if the safeguards are kept. `ebook-dummy-gateway` untouched; checkout/currency/env/email/download logic in the mu-plugin unchanged; redesign = child theme; new admin features = new files in `mu-plugins/ebook-store-core/`.
@@ -392,3 +393,37 @@ Demo sales counts (and the "Bestseller" badges/section they drive) are **fake**.
 ### Open decisions for the user
 - Merge `feature/ui-redesign` into `main`? (Not merged, not pushed.)
 - Replace the current ebookstore.tech build with this project? (Not touched.)
+
+## Phase 13 — Home banners, carousel controls, shop page, category control (2026-10-03, user feedback)
+
+### Requested by the user
+The home banner area should look more attractive, with 2–3 separate promotion banners. The carousel buttons should look better, and the pause/play button is not wanted. On All eBooks, pagination should be at the bottom and the page layout improved. The admin should be able to manage Browse by Category. Chosen options: "slider + side banners" and "admin picks categories".
+
+### Done
+- **Side promo banners** (new mu-plugin file `ebook-store-core/promo-banners.php`, admin **Home Page → Side Banners**). There are 2 banners. Each has: show/hide, small label, title, text, button text, link, colour (navy/coral/gold/cream, all ≥ 4.5:1 text contrast), and either 2 book covers from a list (Editor's Picks / Newest / Bestsellers / none) or an uploaded image. Links are stored relative (`/shop/…`), so no search-replace is needed after a domain move. Saving needs a nonce and `edit_pages`; text is sanitized and length-limited; `javascript:` links are dropped; unknown colours fall back to the default.
+- **Home hero layout** (`inc/hero.php`, `template-parts/promo-banners.php`, `components.css`):
+  - **Desktop:** slider (2/3) + 2 stacked banners (1/3), same height.
+  - **Tablet:** slider, then 2 banners side by side.
+  - **Phone:** stacked.
+  - No slides → default hero with the banners in a row below it.
+- **Carousel controls** (`hero-carousel.php/.js`, `carousel.css`): the slider is now contained with rounded corners (no longer full-bleed). It has round white arrows on the left/right edges (shown on hover/focus on desktop, hidden on touch screens, where you swipe) and small bar dots centred at the bottom. **Pause button removed** at the user's request. Autoplay still pauses on hover/keyboard focus/hidden tab, never runs with reduced motion, and can be set to 0 in Slideshow Settings. Note: WCAG 2.2.2 expects a pause control for auto-moving content; this is a deliberate client decision.
+- **All eBooks / category / search pages** (new `inc/shop.php`):
+  - **Layout:** desktop has a left sidebar card (Categories with counts, current one highlighted; Collections: Bestsellers, Editor's Picks, New Arrivals) and 3 eBooks per row. On phones/tablets the categories become a swipeable chip row, with the current chip scrolled into view.
+  - **Toolbar:** result count + Sort by.
+  - **Pagination:** removed above the grid (Storefront hook); below the grid it is centred, with square buttons and "← Previous / Next →" (arrows only on small phones).
+  - The old category dropdown (and its JS) was removed, since the sidebar replaces it.
+- **Browse by Category control** (Sections page): tick categories and give them positions 1, 2, 3 …; none ticked = automatic (the biggest categories). The card picture is the category's own image (Products → Categories → Thumbnail), else the newest cover. Empty categories are hidden.
+- Slide image advice updated to 1600 × 900 (slider is narrower now).
+
+### Tests (all passed)
+- Admin as `ebook_manager`:
+  - The Side Banners page has 2 boxes, image pickers and the menu order Hero Slides, Slideshow Settings, Side Banners, Sections.
+  - Saves work: gold/bestsellers/relative link → correct class + full URL; HTML stripped from the title; hidden banner not shown.
+  - Bad colour → default; `javascript:` link → banner without link; image → image variant; invalid image ID ignored.
+  - Without a nonce the save returns 403; logged out it returns 400.
+- Sections: Travel(1)/Fiction(2)/Cooking(3) → home shows exactly that order; all unticked → automatic; a category thumbnail is used when set. Test data reset afterwards.
+- Screenshots at 1440/1024/768/375 (home, shop, shop page 5, category on phone).
+- Regression:
+  - #246 USD success and #247 GBP success: completed + PDF download + "ready to download" email (1 link each).
+  - #248 USD fail and #249 GBP fail: failed, 0 downloads, "unsuccessful" emails.
+  - Charge notices are correct. The accessibility script passes on all 8 pages. PHP log empty. `ebook-dummy-gateway`: 0 lines changed.

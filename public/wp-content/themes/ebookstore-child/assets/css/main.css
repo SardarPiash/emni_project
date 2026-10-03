@@ -1906,14 +1906,6 @@ p.woocommerce-thankyou-order-received {
 	border-color: var(--color-primary);
 }
 
-/* Pagination (only when there are more than 12 eBooks) sits on its own line. */
-.storefront-sorting .woocommerce-pagination {
-	flex-basis: 100%;
-	float: none;
-	margin: 0;
-	text-align: center;
-}
-
 @media (max-width: 599px) {
 	.storefront-sorting .woocommerce-result-count {
 		flex-basis: 100%;
@@ -1927,12 +1919,6 @@ p.woocommerce-thankyou-order-received {
 		width: 100%;
 		min-width: 0;
 	}
-}
-
-/* Pagination below the grid (no toolbar box there). */
-.site-main > .woocommerce-pagination {
-	margin: 0 0 2rem;
-	text-align: center;
 }
 
 /* Tablets (768–1023px): Storefront's two checkout columns are too narrow, so stack them. */

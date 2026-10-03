@@ -22,22 +22,49 @@ function ebookstore_child_hero_slides() {
 }
 
 /**
- * Print the hero (carousel or default).
+ * Side promo banners to show (empty if the mu-plugin feature is unavailable).
+ *
+ * @return array[]
+ */
+function ebookstore_child_promo_banners() {
+	static $banners = null;
+	if ( null === $banners ) {
+		$banners = function_exists( 'ebookstore_get_promo_banners' ) ? ebookstore_get_promo_banners() : array();
+	}
+	return $banners;
+}
+
+/**
+ * Print the hero: slideshow with the side banners next to it, or the default
+ * hero with the banners in a row below it.
  */
 function ebookstore_child_hero() {
-	$slides = ebookstore_child_hero_slides();
-	if ( $slides ) {
-		get_template_part(
-			'template-parts/hero-carousel',
-			null,
-			array(
-				'slides'   => $slides,
-				'autoplay' => function_exists( 'ebookstore_hero_autoplay_seconds' ) ? ebookstore_hero_autoplay_seconds() : 0,
-			)
-		);
-	} else {
+	$slides  = ebookstore_child_hero_slides();
+	$banners = ebookstore_child_promo_banners();
+
+	if ( ! $slides ) {
 		get_template_part( 'template-parts/hero-default' );
+		if ( $banners ) {
+			echo '<div class="ebook-hero-grid ebook-hero-grid--row">';
+			get_template_part( 'template-parts/promo-banners', null, array( 'banners' => $banners ) );
+			echo '</div>';
+		}
+		return;
 	}
+
+	echo '<div class="ebook-hero-grid' . ( $banners ? ' has-banners' : '' ) . '">';
+	get_template_part(
+		'template-parts/hero-carousel',
+		null,
+		array(
+			'slides'   => $slides,
+			'autoplay' => function_exists( 'ebookstore_hero_autoplay_seconds' ) ? ebookstore_hero_autoplay_seconds() : 0,
+		)
+	);
+	if ( $banners ) {
+		get_template_part( 'template-parts/promo-banners', null, array( 'banners' => $banners ) );
+	}
+	echo '</div>';
 }
 
 add_action(
