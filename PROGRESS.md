@@ -275,3 +275,23 @@ Working locally at `http://localhost:8080` (native Windows: PHP 8.3, MySQL 9.7, 
 - For Hostinger later: switch the SMTP lines to the Hostinger mailbox (DEPLOY.md §3c).
 - 2026-10-03 (user request): product images removed from all emails (`woocommerce_email_order_items_args` / `woocommerce_email_fulfillment_items_args` → `show_image=false` in the mu-plugin). Verified with order #45: 0 images, download link still present, sent via Gmail.
 - 2026-10-03 (user request): shop toolbar — removed the duplicate sorting dropdown + result count below the grid (Storefront adds both above and below); redesigned the top toolbar (white bar, result count left, "Sort by" + styled dropdown right, stacks on phones); smaller gap under page titles on shop/cart/checkout/account. Pagination below the grid kept (shows only with > 12 eBooks).
+
+---
+
+# UI Redesign (ui_redesign_prompt.md — Phases 8–12)
+
+| Phase | Name | Status |
+|-------|------|--------|
+| 8 | Impact analysis, research, design proposal | ✅ Complete (2026-10-03) — approved by user |
+| 9 | Design refresh and homepage layout | 🔄 In progress |
+| 10 | Hero banner / carousel with admin | ⏳ |
+| 11 | Demo catalog (50) + homepage sections | ⏳ |
+| 12 | Regression test, polish, deploy notes | ⏳ |
+
+## Phase 8 — summary (2026-10-03)
+- Verdict: safe if the safeguards are kept. `ebook-dummy-gateway` untouched; checkout/currency/env/email/download logic in the mu-plugin unchanged; redesign = child theme; new admin features = new files in `mu-plugins/ebook-store-core/`.
+- **User decisions (all recommendations approved):** custom "Hero Slides" (not a slider plugin); keep palette + fonts, add `--color-primary-soft #E8EEF5` (10.1:1 with primary) and `--color-accent-soft #FBE9E3` (12.5:1 with primary-dark) + spacing scale + 2 shadow levels; the existing 6 sample eBooks become demo (`_ebookstore_demo`); homepage section settings on an admin page; search box back in the header; no carousel library (vanilla JS; Swiper heavy, Splide unmaintained since 2022; Embla only as fallback); visible pause button on the carousel (WCAG 2.2.2); Bestsellers on the live site must use real sales only.
+- Design research: Stripe Press, Leanpub, Penguin UK, Payhip, bookstore UX case study (inspiration only).
+- Images: Unsplash + Pexels licences verified 2026-10-03 (free commercial use, attribution optional; no unaltered resale, no implied endorsement, avoid identifiable people/brands) → `IMAGE_CREDITS.md`. Covers: generated originals only.
+- **Live site finding:** ebookstore.tech runs a different build (fse-book-store theme + Elementor, 6 products, no currency switcher) — none of this project is live. Ask again before any deployment (Phase 12).
+- Safety (done at Phase 9 start): tag `before-ui-redesign` (010c5af), branch `feature/ui-redesign`, DB backup `backups/before-ui-redesign.sql` (via `bin/export-db.ps1`; `wp db export` fails on this PC). Rollback: `git checkout main` + import that file.
